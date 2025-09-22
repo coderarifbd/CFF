@@ -1,0 +1,126 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Cashbook;
+use Illuminate\Http\Request;
+
+class OtherIncomeController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware(['auth']);
+        $this->middleware(['role:Admin|Accountant'])->only(['index','create','store','edit','update']);
+        $this->middleware(['role:Admin'])->only(['destroy']);
+    }
+
+    public function index()
+    {
+        $systemCats = ['subscription','extra','fine','interest','investment return'];
+        $query = Cashbook::where('type','income')
+            ->whereRaw('LOWER(category) NOT IN ('.implode(',', array_fill(0, count($systemCats), '?')).')', $systemCats)
+            ->latest('date');
+
+        if (request('category')) {
+            $query->where('category', request('category'));
+        }
+        if (request('month')) {
+            $query->whereMonth('date', request('month'));
+        }
+        if (request('year')) {
+            $query->whereYear('date', request('year'));
+        }
+        if (request('search')) {
+            $search = strtolower(trim(request('search')));
+            $query->where(function($q) use ($search) {
+                $q->whereRaw('LOWER(category) LIKE ?', ["%{$search}%"]) 
+                  ->orWhereRaw('LOWER(note) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        $incomes = $query->with('addedBy')->paginate(15)->withQueryString();
+        $total = (float) (clone $query)->sum('amount');
+
+        $categories = Cashbook::where('type','income')
+            ->whereRaw('LOWER(category) NOT IN ('.implode(',', array_fill(0, count($systemCats), '?')).')', $systemCats)
+            ->select('category')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category')
+            ->toArray();
+
+        if (request()->ajax() || request('ajax')) {
+            return view('other_incomes.partials.table', compact('incomes','total'));
+        }
+
+        // Dynamic years from other income dates
+        $minDate = Cashbook::where('type','income')
+            ->whereRaw('LOWER(category) NOT IN ('.implode(',', array_fill(0, count($systemCats), '?')).')', $systemCats)
+            ->min('date');
+        $maxDate = Cashbook::where('type','income')
+            ->whereRaw('LOWER(category) NOT IN ('.implode(',', array_fill(0, count($systemCats), '?')).')', $systemCats)
+            ->max('date');
+        $yearStart = $minDate ? (int) date('Y', strtotime($minDate)) : 2019;
+        $yearEnd = max((int) date('Y'), $maxDate ? (int) date('Y', strtotime($maxDate)) : (int) date('Y')) + 1;
+
+        return view('other_incomes.index', compact('incomes','total','categories','yearStart','yearEnd'));
+    }
+
+    public function create()
+    {
+        $systemCats = ['subscription','extra','fine','interest','investment return'];
+        $categories = Cashbook::where('type','income')
+            ->whereRaw('LOWER(category) NOT IN ('.implode(',', array_fill(0, count($systemCats), '?')).')', $systemCats)
+            ->select('category')->distinct()->orderBy('category')->pluck('category');
+        return view('other_incomes.create', compact('categories'));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'date' => ['required','date'],
+            'category' => ['required','string','max:100'],
+            'amount' => ['required','numeric','min:0'],
+            'note' => ['nullable','string','max:255'],
+        ]);
+
+        Cashbook::create([
+            'date' => $data['date'],
+            'type' => 'income',
+            'category' => $data['category'],
+            'amount' => $data['amount'],
+            'note' => $data['note'] ?? null,
+            'added_by' => auth()->id(),
+        ]);
+
+        return redirect()->route('other-incomes.index')->with('status','Income added');
+    }
+
+    public function edit(Cashbook $income)
+    {
+        abort_unless($income->type === 'income', 404);
+        $categories = Cashbook::where('type','income')->select('category')->distinct()->orderBy('category')->pluck('category');
+        return view('other_incomes.edit', ['income' => $income, 'categories' => $categories]);
+    }
+
+    public function update(Request $request, Cashbook $income)
+    {
+        abort_unless($income->type === 'income', 404);
+        $data = $request->validate([
+            'date' => ['required','date'],
+            'category' => ['required','string','max:100'],
+            'amount' => ['required','numeric','min:0'],
+            'note' => ['nullable','string','max:255'],
+        ]);
+
+        $income->update($data);
+        return redirect()->route('other-incomes.index')->with('status','Income updated');
+    }
+
+    public function destroy(Cashbook $income)
+    {
+        abort_unless($income->type === 'income', 404);
+        $income->delete();
+        return redirect()->route('other-incomes.index')->with('status','Income deleted');
+    }
+}
