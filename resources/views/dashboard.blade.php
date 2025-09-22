@@ -3,6 +3,7 @@
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-900 dark:text-gray-700 tracking-tight">
                 {{ __('Dashboard') }}
+                check dashboard
             </h2>
             <div class="text-xs text-gray-500 dark:text-gray-400">
                 Updated {{ now()->format('M d, Y') }}
