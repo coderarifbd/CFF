@@ -68,22 +68,24 @@
                 </nav>
             </header>
 
-            <div class="relative px-6 pt-24 lg:px-8">
+            <div class="relative px-6 lg:px-8">
                 <div aria-hidden="true" class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
                     <div class="relative left-1/2 aspect-[1155/678] w-[72rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-pink-400 to-indigo-400 opacity-30"></div>
                 </div>
-                <div class="mx-auto max-w-2xl py-24 sm:py-40 lg:py-48 text-center">
-                    <h1 class="text-4xl sm:text-6xl font-semibold tracking-tight uppercase">Welcome To CFF</h1>
-                    <p class="mt-6 text-lg text-gray-300">Manage members, deposits, investments and expenses in one place.</p>
-                    <div class="mt-10 flex items-center justify-center gap-x-4">
-                        @auth
-                            <a href="{{ url('/dashboard') }}" class="rounded-md bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Go to Dashboard</a>
-                        @else
-                            <a href="{{ route('login') }}" class="rounded-md bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Log in <span aria-hidden="true" class="ml-1">&rarr;</span></a>
-                            @if (Route::has('register'))
-                            <!-- <a href="{{ route('register') }}" class="text-sm font-semibold">Register <span aria-hidden="true">→</span></a> -->
-                            @endif
-                        @endauth
+                <div class="mx-auto max-w-2xl min-h-screen grid place-items-center text-center">
+                    <div>
+                        <h1 class="text-4xl sm:text-6xl font-semibold tracking-tight uppercase">Welcome To CFF</h1>
+                        <p class="mt-6 text-lg text-gray-300">Manage members, deposits, investments and expenses in one place.</p>
+                        <div class="mt-10 flex items-center justify-center gap-x-4">
+                            @auth
+                                <a href="{{ url('/dashboard') }}" class="rounded-md bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Go to Dashboard</a>
+                            @else
+                                <a href="{{ route('login') }}" class="rounded-md bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500">Log in <span aria-hidden="true" class="ml-1">&rarr;</span></a>
+                                @if (Route::has('register'))
+                                <!-- <a href="{{ route('register') }}" class="text-sm font-semibold">Register <span aria-hidden="true">→</span></a> -->
+                                @endif
+                            @endauth
+                        </div>
                     </div>
                 </div>
                 <div aria-hidden="true" class="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]">
@@ -313,7 +315,7 @@
         </div>
 
         @if (Route::has('login'))
-            <div class="h-14.5 hidden lg:block"></div>
+            <div class="hidden lg:block"></div>
         @endif
     </body>
 </html>
