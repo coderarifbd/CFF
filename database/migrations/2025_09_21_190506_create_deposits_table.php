@@ -20,13 +20,11 @@ return new class extends Migration
             $table->enum('payment_method', ['cash', 'bank', 'mobile']);
             $table->text('note')->nullable();
             $table->foreignId('added_by')->constrained('users');
-            // generated month key for duplicate-prevention
-            $table->string('year_month', 7)->storedAs("DATE_FORMAT(`date`,'%Y-%m')");
             $table->timestamps();
 
-            // Prevent duplicate entry for same member & same month & type
-            $table->unique(['member_id', 'type', 'year_month'], 'uniq_member_month_type');
+            // Indexes for common filters
             $table->index(['member_id', 'date']);
+            $table->index(['member_id','type','date'], 'idx_member_type_date');
         });
     }
 
