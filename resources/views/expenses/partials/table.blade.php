@@ -2,6 +2,7 @@
     <table class="min-w-full table-auto border-separate border-spacing-0">
         <thead class="bg-gray-50">
             <tr class="text-left">
+                <th class="px-4 py-2 w-12">SL</th>
                 <th class="px-4 py-2">Date</th>
                 <th class="px-4 py-2">Category</th>
                 <th class="px-4 py-2">Amount</th>
@@ -13,7 +14,8 @@
         <tbody>
             @forelse($expenses as $e)
                 <tr class="odd:bg-white even:bg-gray-50 hover:bg-gray-100">
-                    <td class="px-4 py-2">{{ $e->date->format('Y-m-d') }}</td>
+                    <td class="px-4 py-2">{{ ($expenses->firstItem() ?? 1) + $loop->index }}</td>
+                    <td class="px-4 py-2">{{ $e->date->format('d-M - Y') }}</td>
                     <td class="px-4 py-2">{{ $e->category }}</td>
                     <td class="px-4 py-2 font-semibold">{{ number_format($e->amount,2) }}</td>
                     <td class="px-4 py-2">{{ $e->note }}</td>
@@ -41,7 +43,7 @@
         </tbody>
         <tfoot>
             <tr class="border-t">
-                <td class="px-4 py-2 font-semibold" colspan="2">Total</td>
+                <td class="px-4 py-2 font-semibold" colspan="3">Total</td>
                 <td class="px-4 py-2 font-semibold">{{ number_format($total,2) }}</td>
                 <td colspan="3"></td>
             </tr>

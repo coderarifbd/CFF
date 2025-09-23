@@ -62,6 +62,7 @@
                     <table class="min-w-full table-auto">
                         <thead>
                             <tr class="bg-gray-50 text-left">
+                                <th class="px-4 py-2 w-12">SL</th>
                                 <th class="px-4 py-2">Date</th>
                                 <th class="px-4 py-2">Breakdown</th>
                                 <th class="px-4 py-2 text-right">Total</th>
@@ -70,7 +71,8 @@
                         <tbody>
                             @forelse($receipts as $r)
                                 <tr class="odd:bg-white even:bg-gray-50">
-                                    <td class="px-4 py-2">{{ $r->date->format('Y-m-d') }}</td>
+                                    <td class="px-4 py-2">{{ ($receipts->firstItem() ?? 1) + $loop->index }}</td>
+                                    <td class="px-4 py-2">{{ $r->date->format('d-M - Y') }}</td>
                                     <td class="px-4 py-2">
                                         <div class="flex flex-wrap gap-1.5">
                                             @foreach($r->items as $it)

@@ -127,6 +127,7 @@
                         <table class="min-w-full text-sm">
                             <thead class="bg-gray-50 dark:bg-slate-700/40 text-gray-600 dark:text-slate-300">
                                 <tr>
+                                    <th scope="col" class="px-4 py-2 text-left font-medium w-12">SL</th>
                                     <th scope="col" class="px-4 py-2 text-left font-medium">Date</th>
                                     <th scope="col" class="px-4 py-2 text-left font-medium">Member</th>
                                     <th scope="col" class="px-4 py-2 text-left font-medium">Breakdown</th>
@@ -136,7 +137,8 @@
                             <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
                                 @forelse($recentReceipts as $r)
                                     <tr class="hover:bg-gray-50/60 dark:hover:bg-slate-700/30">
-                                        <td class="px-4 py-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">{{ $r->date->format('Y-m-d') }}</td>
+                                        <td class="px-4 py-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">{{ $loop->iteration }}</td>
+                                        <td class="px-4 py-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">{{ $r->date->format('d-M - Y') }}</td>
                                         <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $r->member->name ?? '—' }}</td>
                                         <td class="px-4 py-3">
                                             <div class="flex flex-wrap gap-1.5">
@@ -189,6 +191,7 @@
                         <table class="min-w-full text-sm">
                             <thead class="bg-gray-50 dark:bg-slate-700/40 text-gray-600 dark:text-slate-300">
                                 <tr>
+                                    <th class="px-4 py-2 text-left font-medium w-12">SL</th>
                                     <th class="px-4 py-2 text-left font-medium">Date</th>
                                     <th class="px-4 py-2 text-left font-medium">Title</th>
                                     <th class="px-4 py-2 text-left font-medium">Type</th>
@@ -199,7 +202,8 @@
                             <tbody class="divide-y divide-gray-100 dark:divide-slate-700">
                                 @forelse($recentInvestments as $inv)
                                     <tr class="hover:bg-gray-50/60 dark:hover:bg-slate-700/30">
-                                        <td class="px-4 py-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">{{ $inv->date->format('Y-m-d') }}</td>
+                                        <td class="px-4 py-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">{{ $loop->iteration }}</td>
+                                        <td class="px-4 py-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">{{ $inv->date->format('d-M - Y') }}</td>
                                         <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $inv->title }}</td>
                                         <td class="px-4 py-3 capitalize text-gray-700 dark:text-slate-200">{{ $inv->type }}</td>
                                         <td class="px-4 py-3 text-right tabular-nums">{{ number_format($inv->amount, 2) }}</td>

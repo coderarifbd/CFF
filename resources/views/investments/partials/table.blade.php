@@ -2,6 +2,7 @@
     <table class="min-w-full table-auto border-separate border-spacing-0">
         <thead class="sticky top-0 z-10">
             <tr class="bg-gray-50/90 backdrop-blur text-left shadow">
+                <th class="px-4 py-2 font-semibold text-gray-700 w-12">SL</th>
                 <th class="px-4 py-2 font-semibold text-gray-700">Title</th>
                 <th class="px-4 py-2 font-semibold text-gray-700">Type</th>
                 <th class="px-4 py-2 font-semibold text-gray-700 text-right">Amount</th>
@@ -14,6 +15,7 @@
         <tbody class="divide-y">
             @forelse($investments as $inv)
                 <tr class="odd:bg-white even:bg-gray-50 hover:bg-gray-100 transition">
+                    <td class="px-4 py-3">{{ ($investments->firstItem() ?? 1) + $loop->index }}</td>
                     <td class="px-4 py-3">
                         <a href="{{ route('investments.show',$inv) }}" class="text-blue-700 hover:underline font-medium">{{ $inv->title }}</a>
                         <div class="text-xs text-gray-500">Added: {{ optional($inv->addedBy)->name ?? '-' }}</div>
@@ -30,7 +32,7 @@
                         <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $typeBadge }}">{{ $inv->type }}</span>
                     </td>
                     <td class="px-4 py-3 font-semibold text-right tabular-nums">{{ number_format($inv->amount,2) }}</td>
-                    <td class="px-4 py-3 whitespace-nowrap">{{ $inv->date->format('Y-m-d') }}</td>
+                    <td class="px-4 py-3 whitespace-nowrap">{{ $inv->date->format('d-F - Y') }}</td>
                     <td class="px-4 py-3">
                         @php
                             $badge = $inv->status==='active'
@@ -56,7 +58,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="px-4 py-10 text-center">
+                    <td colspan="8" class="px-4 py-10 text-center">
                         <div class="mx-auto w-fit rounded-xl border border-dashed border-gray-200 p-6 text-gray-500">
                             <div class="text-3xl mb-1">📉</div>
                             <div>No investments found.</div>
@@ -73,7 +75,7 @@
         @if(!empty($summary))
         <tfoot>
             <tr class="bg-gray-50">
-                <td class="px-4 py-3 text-sm text-gray-600" colspan="2">Totals (filtered)</td>
+                <td class="px-4 py-3 text-sm text-gray-600" colspan="3">Totals (filtered)</td>
                 <td class="px-4 py-3 text-right font-semibold tabular-nums">{{ number_format($summary['amountSum'] ?? 0, 2) }}</td>
                 <td></td>
                 <td class="px-4 py-3 text-sm text-gray-600">

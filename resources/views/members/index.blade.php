@@ -50,6 +50,7 @@
                     <table class="min-w-full text-sm">
                         <thead class="bg-gray-50">
                             <tr class="text-left">
+                                <th class="px-4 py-2 w-12">SL</th>
                                 <th class="px-4 py-2">Member</th>
                                 <th class="px-4 py-2">Contact</th>
                                 <th class="px-4 py-2">Type</th>
@@ -61,6 +62,7 @@
                         <tbody class="divide-y divide-gray-100">
                             @forelse($members as $member)
                                 <tr class="hover:bg-gray-50">
+                                    <td class="px-4 py-3">{{ ($members->firstItem() ?? 1) + $loop->index }}</td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-gray-900">
                                             <a href="{{ route('members.show', $member) }}" class="hover:underline">{{ $member->name }}</a>
@@ -122,7 +124,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-10 text-center text-gray-500">No members found.</td>
+                                    <td colspan="7" class="px-4 py-10 text-center text-gray-500">No members found.</td>
                                 </tr>
                             @endforelse
                         </tbody>

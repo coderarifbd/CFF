@@ -56,6 +56,7 @@
                     <table class="min-w-full table-auto border-separate border-spacing-0">
                         <thead class="sticky top-0">
                             <tr class="bg-gray-50 text-left">
+                                <th class="px-4 py-2 w-12">SL</th>
                                 <th class="px-4 py-2">Date</th>
                                 <th class="px-4 py-2">Member</th>
                                 <th class="px-4 py-2">Breakdown</th>
@@ -69,7 +70,8 @@
                         <tbody>
                             @forelse($receipts as $r)
                                 <tr class="border-t odd:bg-white even:bg-gray-50 hover:bg-gray-100">
-                                    <td class="px-4 py-2">{{ $r->date->format('Y-m-d') }}</td>
+                                    <td class="px-4 py-2">{{ ($receipts->firstItem() ?? 1) + $loop->index }}</td>
+                                    <td class="px-4 py-2">{{ $r->date->format('d-M - Y') }}</td>
                                     <td class="px-4 py-2">{{ $r->member->name ?? '—' }}</td>
                                     <td class="px-4 py-2">
                                         <div class="flex flex-wrap gap-2">
@@ -107,13 +109,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">No deposits found.</td>
+                                    <td colspan="9" class="px-4 py-6 text-center text-gray-500">No deposits found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                         <tfoot>
                             <tr class="border-t">
-                                <td class="px-4 py-2 font-semibold" colspan="3">Totals</td>
+                                <td class="px-4 py-2 font-semibold" colspan="4">Totals</td>
                                 <td class="px-4 py-2 font-semibold">{{ number_format($totalAmount,2) }}</td>
                                 <td class="px-4 py-2 font-semibold">&nbsp;</td>
                                 <td class="px-4 py-2 font-semibold">Fines: {{ number_format($fineTotal,2) }}</td>

@@ -18,11 +18,16 @@ class DashboardController extends Controller
         // For Members: show own totals only; for Admin/Accountant/Super Admin: show global totals
         if (auth()->user()->hasRole('Member')) {
             $member = Member::where('user_id', auth()->id())->first();
-            // Global totals for dashboard
-            $totalReceipts = (float) DepositReceipt::sum('total_amount');
+            // Member-specific totals for dashboard
+            $memberId = optional($member)->id;
+            $totalReceipts = (float) DepositReceipt::where('member_id', $memberId)->sum('total_amount');
             $totalsByType = DepositItem::selectRaw("type, SUM(amount) as sum")
+                ->whereHas('receipt', function($q) use ($memberId) {
+                    $q->where('member_id', $memberId);
+                })
                 ->groupBy('type')
                 ->pluck('sum', 'type');
+            // Keep variable names consistent with blade
             $totalSubscription = (float) ($totalsByType['subscription'] ?? 0);
             $totalExtra = (float) ($totalsByType['extra'] ?? 0);
             $totalFine = (float) ($totalsByType['fine'] ?? 0);
@@ -58,15 +63,30 @@ class DashboardController extends Controller
                 ->sum('amount');
 
             // Reporting metrics
-            $totalBalance = $totalReceipts + $totalInvestInterest; // deposits + interest (exclude returns)
-            // Show ALL expenses in the KPI card
-            $totalExpense = $expenseAll;
-            // Remaining Balance: Total + Returns + OtherIncome − Invest − Expense (all)
-            $remainingBalance = $totalBalance + $totalInvestReturn + $otherIncome - $totalInvestOutflow - $expenseAll;
+            // Keep member-specific cards for deposit/fine/extra
+            $totalBalance = $totalReceipts + $totalInvestInterest; // member deposits + global interest (as currently shown)
+
+            // But compute Remaining Balance the same way as before (using GLOBAL totals)
+            $globalTotalReceipts      = (float) DepositReceipt::sum('total_amount');
+            $globalInvestOutflow      = (float) Investment::sum('amount');
+            $globalInvestReturn       = (float) Investment::where('status','returned')->sum('return_amount');
+            $globalInvestInterest     = (float) InvestmentInterest::sum('amount');
+            $globalExpenseAll         = (float) Cashbook::where('type','expense')->sum('amount');
+            // Other income excludes system categories (case-insensitive) like in admin branch
+            $systemIncomeCats = ['subscription','extra','fine','interest','investment return'];
+            $placeholders = implode(',', array_fill(0, count($systemIncomeCats), '?'));
+            $globalOtherIncome = (float) Cashbook::where('type','income')
+                ->whereRaw('LOWER(category) NOT IN ('.$placeholders.')', $systemIncomeCats)
+                ->sum('amount');
+
+            $totalExpense = $globalExpenseAll; // show ALL expenses in KPI card
+            $remainingBalance = ($globalTotalReceipts + $globalInvestInterest)
+                + $globalInvestReturn + $globalOtherIncome
+                - $globalInvestOutflow - $globalExpenseAll;
             // For consistency
             $cashBalance = $remainingBalance;
             $recentReceipts = DepositReceipt::with(['member','items'])
-                ->where('member_id', optional($member)->id)
+                ->where('member_id', $memberId)
                 ->latest('date')->limit(5)->get();
             $recentInvestments = Investment::latest('date')->limit(5)->get();
         } else {
