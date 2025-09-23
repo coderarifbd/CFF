@@ -114,19 +114,52 @@ class ExpenseController extends Controller
         ]);
 
         $combinedNote = trim($data['title'] . (isset($data['note']) && $data['note'] !== '' ? ' — '.$data['note'] : ''));
+
+        // Capture before values for audit
+        $before = [
+            'date' => optional($expense->date)->format('Y-m-d'),
+            'category' => $expense->category,
+            'amount' => $expense->amount,
+            'note' => $expense->note,
+            'type' => 'expense',
+        ];
+
         $expense->update([
             'date' => $data['date'],
             'category' => $data['category'],
             'amount' => $data['amount'],
             'note' => $combinedNote,
         ]);
+
+        // Log changes (Super Admin can view later)
+        try {
+            \App\Models\ActivityLog::log($expense, 'updated', [
+                'before' => $before,
+                'after' => [
+                    'date' => $data['date'],
+                    'category' => $data['category'],
+                    'amount' => $data['amount'],
+                    'note' => $combinedNote,
+                    'type' => 'expense',
+                ],
+            ]);
+        } catch (\Throwable $e) { /* ignore logging failure */ }
         return redirect()->route('expenses.index')->with('status','Expense updated');
     }
 
     public function destroy(Cashbook $expense)
     {
         abort_unless($expense->type === 'expense', 404);
+        // Snapshot before delete
+        $before = [
+            'date' => optional($expense->date)->format('Y-m-d'),
+            'category' => $expense->category,
+            'amount' => $expense->amount,
+            'note' => $expense->note,
+        ];
         $expense->delete();
+        // Log deletion
+        try { \App\Models\ActivityLog::log($expense, 'deleted', ['before' => $before]); } catch (\Throwable $e) { }
         return redirect()->route('expenses.index')->with('status','Expense deleted');
     }
 }

@@ -118,19 +118,50 @@ class OtherIncomeController extends Controller
         ]);
 
         $combinedNote = trim($data['title'] . (isset($data['note']) && $data['note'] !== '' ? ' — '.$data['note'] : ''));
+
+        // Before snapshot
+        $before = [
+            'date' => optional($income->date)->format('Y-m-d'),
+            'category' => $income->category,
+            'amount' => $income->amount,
+            'note' => $income->note,
+            'type' => 'income',
+        ];
+
         $income->update([
             'date' => $data['date'],
             'category' => $data['category'],
             'amount' => $data['amount'],
             'note' => $combinedNote,
         ]);
+
+        // Log
+        try {
+            \App\Models\ActivityLog::log($income, 'updated', [
+                'before' => $before,
+                'after' => [
+                    'date' => $data['date'],
+                    'category' => $data['category'],
+                    'amount' => $data['amount'],
+                    'note' => $combinedNote,
+                    'type' => 'income',
+                ],
+            ]);
+        } catch (\Throwable $e) { /* ignore */ }
         return redirect()->route('other-incomes.index')->with('status','Income updated');
     }
 
     public function destroy(Cashbook $income)
     {
         abort_unless($income->type === 'income', 404);
+        $before = [
+            'date' => optional($income->date)->format('Y-m-d'),
+            'category' => $income->category,
+            'amount' => $income->amount,
+            'note' => $income->note,
+        ];
         $income->delete();
+        try { \App\Models\ActivityLog::log($income, 'deleted', ['before' => $before]); } catch (\Throwable $e) { }
         return redirect()->route('other-incomes.index')->with('status','Income deleted');
     }
 }

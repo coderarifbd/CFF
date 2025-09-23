@@ -254,6 +254,13 @@ class InvestmentController extends Controller
             'note' => ['nullable','string','max:255'],
         ]);
 
+        // Before snapshot
+        $before = [
+            'date' => optional($interest->date)->format('Y-m-d'),
+            'amount' => $interest->amount,
+            'note' => $interest->note,
+        ];
+
         $interest->update($data);
 
         // Update linked cashbook row
@@ -264,6 +271,14 @@ class InvestmentController extends Controller
                 'amount' => $data['amount'],
                 'note' => $data['note'] ?? null,
             ]);
+
+        // Log activity
+        try {
+            \App\Models\ActivityLog::log($interest, 'updated', [
+                'before' => $before,
+                'after' => $data,
+            ]);
+        } catch (\Throwable $e) { /* ignore */ }
 
         return redirect()->route('investments.show', $investment)->with('status','Interest updated');
     }

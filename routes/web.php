@@ -46,6 +46,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     });
 
+    // Admin or Super Admin: Activity Logs
+    Route::middleware('role:Admin|Super Admin')->group(function(){
+        Route::get('/activity-logs', [\App\Http\Controllers\ActivityLogController::class, 'index'])->name('activity-logs.index');
+    });
+
     // Investments
     Route::resource('investments', InvestmentController::class);
     // Add interest (Admin + Accountant)

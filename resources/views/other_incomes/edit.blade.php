@@ -10,6 +10,14 @@
                     @csrf
                     @method('PUT')
 
+                    @php([$__title, $__rest] = array_pad(preg_split('/\s+—\s+/', (string)($income->note ?? ''), 2), 2, ''))
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Income Title</label>
+                        <input type="text" name="title" value="{{ old('title', $__title) }}" placeholder="e.g., Donation, Misc Income" class="mt-1 w-full border rounded px-3 py-2" required>
+                        @error('title')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Date</label>
                         <input type="date" name="date" value="{{ old('date', \Illuminate\Support\Carbon::parse($income->date)->toDateString()) }}" class="mt-1 w-full border rounded px-3 py-2" required>
@@ -40,7 +48,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Note (optional)</label>
-                        <input type="text" name="note" value="{{ old('note', $income->note) }}" class="mt-1 w-full border rounded px-3 py-2">
+                        <input type="text" name="note" value="{{ old('note', $__rest) }}" class="mt-1 w-full border rounded px-3 py-2">
                         @error('note')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
 

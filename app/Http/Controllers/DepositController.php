@@ -250,6 +250,15 @@ class DepositController extends Controller
         $items = $types->map(fn($t)=>['type'=>$t,'amount'=>(float)$validated['amount_'.$t]]);
         $total = $items->sum('amount');
 
+        // Snapshot before
+        $before = [
+            'date' => optional($receipt->date)->format('Y-m-d'),
+            'member_id' => $receipt->member_id,
+            'payment_method' => $receipt->payment_method,
+            'note' => $receipt->note,
+            'total_amount' => $receipt->total_amount,
+        ];
+
         $receipt->update([
             'date'=>$validated['date'],
             'member_id'=>$validated['member_id'],
@@ -281,6 +290,20 @@ class DepositController extends Controller
             ]);
         }
 
+        // Log activity (Super Admin can review)
+        try {
+            \App\Models\ActivityLog::log($receipt, 'updated', [
+                'before' => $before,
+                'after' => [
+                    'date' => $validated['date'],
+                    'member_id' => $validated['member_id'],
+                    'payment_method' => $validated['payment_method'],
+                    'note' => $validated['note'] ?? null,
+                    'total_amount' => $total,
+                ],
+            ]);
+        } catch (\Throwable $e) { /* swallow */ }
+
         return redirect()->route('deposits.index')->with('status','Deposit updated');
     }
 
@@ -290,9 +313,17 @@ class DepositController extends Controller
     public function destroy($id)
     {
         $receipt = DepositReceipt::findOrFail($id);
+        $before = [
+            'date' => optional($receipt->date)->format('Y-m-d'),
+            'member_id' => $receipt->member_id,
+            'payment_method' => $receipt->payment_method,
+            'note' => $receipt->note,
+            'total_amount' => $receipt->total_amount,
+        ];
         Cashbook::where('reference_type', DepositReceipt::class)
             ->where('reference_id', $receipt->id)->delete();
         $receipt->delete();
+        try { \App\Models\ActivityLog::log($receipt, 'deleted', ['before' => $before]); } catch (\Throwable $e) { }
         return redirect()->route('deposits.index')->with('status','Deposit deleted');
     }
 

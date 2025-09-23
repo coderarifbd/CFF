@@ -41,7 +41,7 @@
                         {{ __('Investments') }}
                     </x-nav-link>
                     @endhasanyrole
-                    @role('Admin')
+                    @hasanyrole('Admin|Super Admin')
                     @php($settingsActive = request()->routeIs('settings.*') || request()->routeIs('reports.*'))
                     <div class="relative inline-flex items-center h-full justify-center">
                         <x-dropdown align="left" width="56">
@@ -61,10 +61,15 @@
                                 <x-dropdown-link :href="route('reports.index')" class="{{ request()->routeIs('reports.*') ? 'font-semibold text-gray-900' : '' }}">
                                     {{ __('Reports') }}
                                 </x-dropdown-link>
+                                @hasanyrole('Admin|Super Admin')
+                                <x-dropdown-link :href="route('activity-logs.index')" class="{{ request()->routeIs('activity-logs.*') ? 'font-semibold text-gray-900' : '' }}">
+                                    {{ __('Activity Logs') }}
+                                </x-dropdown-link>
+                                @endhasanyrole
                             </x-slot>
                         </x-dropdown>
                     </div>
-                    @endrole
+                    @endhasanyrole
                 </div>
             </div>
 
@@ -146,14 +151,19 @@
                 {{ __('Investments') }}
             </x-responsive-nav-link>
             @endhasanyrole
-            @role('Admin')
+            @hasanyrole('Admin|Super Admin')
             <x-responsive-nav-link :href="route('settings.index')" :active="request()->routeIs('settings.*')">
                 {{ __('Settings') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                 {{ __('Reports') }}
             </x-responsive-nav-link>
-            @endrole
+            @hasanyrole('Admin|Super Admin')
+            <x-responsive-nav-link :href="route('activity-logs.index')" :active="request()->routeIs('activity-logs.*')">
+                {{ __('Activity Logs') }}
+            </x-responsive-nav-link>
+            @endhasanyrole
+            @endhasanyrole
         </div>
 
         <!-- Responsive Settings Options -->
