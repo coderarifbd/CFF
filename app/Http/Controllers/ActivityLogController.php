@@ -15,15 +15,19 @@ class ActivityLogController extends Controller
     public function index(Request $request)
     {
         $query = ActivityLog::with('user')->latest('created_at');
-
-        if ($request->filled('model')) {
-            $query->where('model_type', $request->model);
-        }
+        // Filter by action: updated | deleted
         if ($request->filled('action')) {
             $query->where('action', $request->action);
         }
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
+        }
+        // Date range filter (created_at)
+        if ($request->filled('start')) {
+            $query->whereDate('created_at', '>=', $request->start);
+        }
+        if ($request->filled('end')) {
+            $query->whereDate('created_at', '<=', $request->end);
         }
 
         $logs = $query->paginate(20)->withQueryString();

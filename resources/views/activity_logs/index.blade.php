@@ -8,17 +8,25 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl">
                 <div class="px-6 pt-6 pb-3 border-b">
                     <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
-                        <div class="md:col-span-4">
-                            <label class="block text-sm text-gray-700">Model Type</label>
-                            <input name="model" value="{{ request('model') }}" placeholder="e.g. App\\Models\\Cashbook" class="mt-1 w-full border rounded px-3 py-2" />
-                        </div>
                         <div class="md:col-span-3">
                             <label class="block text-sm text-gray-700">Action</label>
-                            <input name="action" value="{{ request('action') }}" placeholder="updated" class="mt-1 w-full border rounded px-3 py-2" />
+                            <select name="action" class="mt-1 w-full border rounded px-3 py-2">
+                                <option value="" {{ request('action')==='' ? 'selected' : '' }}>All</option>
+                                <option value="updated" {{ request('action')==='updated' ? 'selected' : '' }}>Updated</option>
+                                <option value="deleted" {{ request('action')==='deleted' ? 'selected' : '' }}>Deleted</option>
+                            </select>
                         </div>
                         <div class="md:col-span-3">
                             <label class="block text-sm text-gray-700">User ID</label>
                             <input name="user_id" value="{{ request('user_id') }}" class="mt-1 w-full border rounded px-3 py-2" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm text-gray-700">Start Date</label>
+                            <input type="date" name="start" value="{{ request('start') }}" class="mt-1 w-full border rounded px-3 py-2" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm text-gray-700">End Date</label>
+                            <input type="date" name="end" value="{{ request('end') }}" class="mt-1 w-full border rounded px-3 py-2" />
                         </div>
                         <div class="md:col-span-2 flex gap-2 md:justify-end">
                             <button class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white shadow hover:bg-indigo-700">Apply</button>
