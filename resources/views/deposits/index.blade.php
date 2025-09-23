@@ -53,9 +53,9 @@
                 @endif
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full table-auto border-separate border-spacing-0">
-                        <thead class="sticky top-0">
-                            <tr class="bg-gray-50 text-left">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr class="text-left">
                                 <th class="px-4 py-2 w-12">SL</th>
                                 <th class="px-4 py-2">Date</th>
                                 <th class="px-4 py-2">Member</th>
@@ -67,9 +67,9 @@
                                 <th class="px-4 py-2">Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-gray-100">
                             @forelse($receipts as $r)
-                                <tr class="border-t odd:bg-white even:bg-gray-50 hover:bg-gray-100">
+                                <tr class="hover:bg-gray-50">
                                     <td class="px-4 py-2">{{ ($receipts->firstItem() ?? 1) + $loop->index }}</td>
                                     <td class="px-4 py-2">{{ $r->date->format('d-M - Y') }}</td>
                                     <td class="px-4 py-2">{{ $r->member->name ?? '—' }}</td>
@@ -96,12 +96,12 @@
                                     <td class="px-4 py-2">{{ $r->note }}</td>
                                     <td class="px-4 py-2">
                                         @if(auth()->check() && auth()->user()->hasRole('Admin'))
-                                        <div class="flex items-center gap-3">
-                                            <a href="{{ route('deposits.edit', $r->id) }}" class="text-indigo-700 hover:underline">Edit</a>
-                                            <form action="{{ route('deposits.destroy', $r->id) }}" method="POST" onsubmit="return confirm('Delete this deposit?')">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <a href="{{ route('deposits.edit', $r->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
+                                            <form action="{{ route('deposits.destroy', $r->id) }}" method="POST" onsubmit="return confirm('Delete this deposit?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="text-red-700 hover:underline">Delete</button>
+                                                <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-rose-500/20 bg-rose-50 hover:bg-rose-100 text-rose-700">🗑️ Delete</button>
                                             </form>
                                         </div>
                                         @endif

@@ -1,6 +1,6 @@
 <div class="overflow-x-auto">
     <table class="min-w-full text-sm">
-        <thead>
+        <thead class="bg-gray-50">
             <tr class="text-left">
                 <th class="px-3 py-2 w-12">SL</th>
                 <th class="px-3 py-2">Date</th>
@@ -12,9 +12,9 @@
                 @endhasanyrole
             </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-gray-100">
             @forelse($incomes as $inc)
-                <tr class="border-t">
+                <tr class="hover:bg-gray-50">
                     <td class="px-3 py-2">{{ ($incomes->firstItem() ?? 1) + $loop->index }}</td>
                     <td class="px-3 py-2">{{ \Illuminate\Support\Carbon::parse($inc->date)->format('d-F - Y') }}</td>
                     <td class="px-3 py-2">{{ $inc->category }}</td>
@@ -23,12 +23,12 @@
                     @hasanyrole('Admin|Accountant')
                     <td class="px-3 py-2 text-right">
                         <div class="inline-flex items-center gap-2">
-                            <a href="{{ route('other-incomes.edit', $inc) }}" class="px-2 py-1 text-indigo-600 hover:underline">Edit</a>
+                            <a href="{{ route('other-incomes.edit', $inc) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
                             @role('Admin')
-                            <form method="POST" action="{{ route('other-incomes.destroy', $inc) }}" onsubmit="return confirm('Delete this income?');">
+                            <form method="POST" action="{{ route('other-incomes.destroy', $inc) }}" onsubmit="return confirm('Delete this income?');" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="px-2 py-1 text-red-600 hover:underline">Delete</button>
+                                <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-rose-500/20 bg-rose-50 hover:bg-rose-100 text-rose-700">🗑️ Delete</button>
                             </form>
                             @endrole
                         </div>

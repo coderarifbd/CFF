@@ -1,5 +1,5 @@
 <div class="overflow-x-auto">
-    <table class="min-w-full table-auto border-separate border-spacing-0">
+    <table class="min-w-full text-sm">
         <thead class="bg-gray-50">
             <tr class="text-left">
                 <th class="px-4 py-2 w-12">SL</th>
@@ -11,9 +11,9 @@
                 <th class="px-4 py-2">Actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-gray-100">
             @forelse($expenses as $e)
-                <tr class="odd:bg-white even:bg-gray-50 hover:bg-gray-100">
+                <tr class="hover:bg-gray-50">
                     <td class="px-4 py-2">{{ ($expenses->firstItem() ?? 1) + $loop->index }}</td>
                     <td class="px-4 py-2">{{ $e->date->format('d-M - Y') }}</td>
                     <td class="px-4 py-2">{{ $e->category }}</td>
@@ -21,15 +21,15 @@
                     <td class="px-4 py-2">{{ $e->note }}</td>
                     <td class="px-4 py-2">{{ $e->addedBy->name ?? '-' }}</td>
                     <td class="px-4 py-2">
-                        <div class="flex items-center gap-3">
+                        <div class="flex flex-wrap items-center gap-2">
                             @hasanyrole('Admin|Accountant')
-                            <a href="{{ route('expenses.edit',$e) }}" class="btn btn-sm">Edit</a>
+                            <a href="{{ route('expenses.edit',$e) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
                             @endhasanyrole
                             @role('Admin')
-                            <form action="{{ route('expenses.destroy',$e) }}" method="POST" onsubmit="return confirm('Delete this expense?')">
+                            <form action="{{ route('expenses.destroy',$e) }}" method="POST" onsubmit="return confirm('Delete this expense?')" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-sm">Delete</button>
+                                <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-rose-500/20 bg-rose-50 hover:bg-rose-100 text-rose-700">🗑️ Delete</button>
                             </form>
                             @endrole
                         </div>
