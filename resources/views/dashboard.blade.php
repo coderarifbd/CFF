@@ -206,7 +206,7 @@
                                         <td class="px-4 py-3 text-gray-700 dark:text-slate-200 whitespace-nowrap">{{ $inv->date->format('d-M - Y') }}</td>
                                         <td class="px-4 py-3 text-gray-900 dark:text-white">{{ $inv->title }}</td>
                                         <td class="px-4 py-3 capitalize text-gray-700 dark:text-slate-200">{{ $inv->type }}</td>
-                                        <td class="px-4 py-3 text-right tabular-nums">{{ number_format($inv->amount, 2) }}</td>
+                                        <td class="px-4 py-3 text-right tabular-nums dark:text-white">{{ number_format($inv->amount, 2) }}</td>
                                         <td class="px-4 py-3">
                                             @php
                                                 $isActive = $inv->status === 'active';
