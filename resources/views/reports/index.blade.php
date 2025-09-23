@@ -56,8 +56,8 @@
                             <tr class="bg-gray-50 text-left">
                                 <th class="px-3 py-2 w-12">SL</th>
                                 <th class="px-3 py-2"><button type="button" data-sort="date" class="hover:underline">Date</button></th>
-                                <th class="px-3 py-2"><button type="button" data-sort="type" class="hover:underline">Type</button></th>
                                 <th class="px-3 py-2">Label</th>
+                                <th class="px-3 py-2"><button type="button" data-sort="type" class="hover:underline">Type</button></th>
                                 <th class="px-3 py-2 text-right"><button type="button" data-sort="in" class="hover:underline">In</button></th>
                                 <th class="px-3 py-2 text-right"><button type="button" data-sort="out" class="hover:underline">Out</button></th>
                             </tr>
@@ -67,6 +67,7 @@
                                 <tr class="border-t odd:bg-white even:bg-gray-50 hover:bg-gray-100">
                                     <td class="px-4 py-2">{{ $loop->iteration }}</td>
                                     <td class="px-4 py-2 whitespace-nowrap" data-date="{{ $row['date'] }}">{{ \Carbon\Carbon::parse($row['date'])->format('d-M - Y') }}</td>
+                                    <td class="px-4 py-2">{{ $row['label'] }}</td>
                                     <td class="px-4 py-2 capitalize" data-type="{{ str_replace('_',' ', $row['type']) }}">
                                         @php($t = str_replace('_',' ', $row['type']))
                                         <span class="px-2 py-0.5 rounded-full text-xs font-medium
@@ -74,10 +75,9 @@
                                             {{ $t==='interest' ? 'bg-emerald-100 text-emerald-800' : '' }}
                                             {{ $t==='invest out' ? 'bg-indigo-100 text-indigo-800' : '' }}
                                             {{ $t==='invest return' ? 'bg-purple-100 text-purple-800' : '' }}
-        									{{ $t==='other income' ? 'bg-slate-100 text-slate-800' : '' }}
+											{{ $t==='other income' ? 'bg-slate-100 text-slate-800' : '' }}
                                             {{ $t==='expense' ? 'bg-rose-100 text-rose-800' : '' }}">{{ $t }}</span>
                                     </td>
-                                    <td class="px-4 py-2">{{ $row['label'] }}</td>
                                     <td class="px-4 py-2 text-right tabular-nums font-semibold" data-in="{{ number_format($row['in'], 2, '.', '') }}">{{ number_format($row['in'], 2) }}</td>
                                     <td class="px-4 py-2 text-right tabular-nums font-semibold" data-out="{{ number_format($row['out'], 2, '.', '') }}">{{ number_format($row['out'], 2) }}</td>
                                 </tr>

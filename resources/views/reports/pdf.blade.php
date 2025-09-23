@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Reports</title>
+    <title>CFF - Reports</title>
     <style>
         @page { margin: 28px 28px; }
         body { font-family: DejaVu Sans, Arial, Helvetica, sans-serif; font-size: 12px; color: #111; }
@@ -19,7 +19,7 @@
     </style>
 </head>
 <body>
-    <h1>Reports</h1>
+    <h1>CFF - Reports</h1>
     <div class="meta">
         @php($range = trim((!empty($start) ? \Carbon\Carbon::parse($start)->format('d-M - Y') : '—'). ' to ' . (!empty($end) ? \Carbon\Carbon::parse($end)->format('d-M - Y') : '—')))
         <strong>Date Range:</strong> {{ $range }}<br>
@@ -31,8 +31,8 @@
             <tr>
                 <th class="sl">SL</th>
                 <th class="date">Date</th>
-                <th class="type">Type</th>
                 <th>Label</th>
+                <th class="type">Type</th>
                 <th class="right">In</th>
                 <th class="right">Out</th>
             </tr>
@@ -42,8 +42,8 @@
                 <tr>
                     <td class="sl">{{ $loop->iteration }}</td>
                     <td class="date">{{ \Carbon\Carbon::parse($row['date'])->format('d-M - Y') }}</td>
-                    <td class="type">{{ str_replace('_',' ', $row['type']) }}</td>
                     <td>{{ $row['label'] }}</td>
+                    <td class="type">{{ str_replace('_',' ', $row['type']) }}</td>
                     <td class="right">{{ number_format($row['in'], 2) }}</td>
                     <td class="right">{{ number_format($row['out'], 2) }}</td>
                 </tr>

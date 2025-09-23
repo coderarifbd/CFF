@@ -8,6 +8,11 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <form method="POST" action="{{ route('other-incomes.store') }}" class="space-y-4">
                     @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Income Title</label>
+                        <input type="text" name="title" value="{{ old('title') }}" placeholder="e.g., Donation, Misc Income" class="mt-1 w-full border rounded px-3 py-2" required>
+                        @error('title')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Date</label>
@@ -39,7 +44,7 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Note (optional)</label>
-                        <input type="text" name="note" value="{{ old('note') }}" class="mt-1 w-full border rounded px-3 py-2">
+                        <input type="text" name="note" value="{{ old('note') }}" class="mt-1 w-full border rounded px-3 py-2" placeholder="Any short note (optional)">
                         @error('note')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
 

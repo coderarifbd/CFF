@@ -171,6 +171,7 @@ class DepositController extends Controller
                 'type' => 'income',
                 'category' => match($it['type']){
                     'subscription' => 'Subscription',
+                    'extra' => 'Extra',
                     'fine' => 'Fine',
                     default => 'Other',
                 },
@@ -266,7 +267,12 @@ class DepositController extends Controller
             Cashbook::create([
                 'date'=>$receipt->date,
                 'type'=>'income',
-                'category'=>match($it['type']){ 'subscription'=>'Subscription','fine'=>'Fine', default=>'Other' },
+                'category'=>match($it['type']){
+                    'subscription'=>'Subscription',
+                    'extra'=>'Extra',
+                    'fine'=>'Fine',
+                    default=>'Other'
+                },
                 'amount'=>$it['amount'],
                 'reference_type'=>DepositReceipt::class,
                 'reference_id'=>$receipt->id,

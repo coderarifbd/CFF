@@ -6,9 +6,18 @@
     <div class="py-6">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                @php
+                    [$__title, $__rest] = array_pad(preg_split('/\s+—\s+/', (string)($expense->note ?? ''), 2), 2, '');
+                @endphp
                 <form method="POST" action="{{ route('expenses.update', $expense) }}" class="space-y-4">
                     @csrf
                     @method('PUT')
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Expense Title</label>
+                        <input type="text" name="title" value="{{ old('title', $__title) }}" placeholder="e.g., Office Rent, Utility Bill" class="mt-1 w-full border rounded px-3 py-2" required>
+                        @error('title')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                    </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Date</label>
@@ -40,8 +49,8 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Note (optional)</label>
-                        <input type="text" name="note" value="{{ old('note', $expense->note) }}" class="mt-1 w-full border rounded px-3 py-2">
-                        @error('note')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
+                        <input type="text" name="note" value="{{ old('note', $__rest) }}" class="mt-1 w-full border rounded px-3 py-2" placeholder="Any short note (optional)">
+        					@error('note')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="flex items-center justify-between gap-3">

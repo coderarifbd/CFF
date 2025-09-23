@@ -90,6 +90,25 @@
                 </div>
             </section>
 
+            {{-- Grand Total (Total balance after expense) --}}
+            <section class="mb-4">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm ring-1 ring-black/5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-[16px] uppercase tracking-[.14em] text-gray-500 dark:text-slate-200 font-semibold">
+                                Grand Total
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-slate-400">
+                                Total balance after expense (Total Balance − Expense)
+                            </p>
+                        </div>
+                        <p class="text-3xl font-extrabold tabular-nums {{ ($grandTotal ?? 0) < 0 ? 'text-red-600' : 'text-emerald-600' }}">
+                            {{ number_format($grandTotal ?? 0, 2) }} /-
+                        </p>
+                    </div>
+                </div>
+            </section>
+
             {{-- Remaining Balance --}}
             <section class="mb-4">
                 <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm ring-1 ring-black/5">

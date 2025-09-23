@@ -4,9 +4,10 @@
             <tr class="text-left">
                 <th class="px-3 py-2 w-12">SL</th>
                 <th class="px-3 py-2">Date</th>
-                <th class="px-3 py-2">Category</th>
+                <th class="px-3 py-2">Title</th>
                 <th class="px-3 py-2">Note</th>
                 <th class="px-3 py-2 text-right">Amount</th>
+                <th class="px-3 py-2">Added By</th>
                 @hasanyrole('Admin|Accountant')
                 <th class="px-3 py-2 text-right">Actions</th>
                 @endhasanyrole
@@ -17,9 +18,11 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-3 py-2">{{ ($incomes->firstItem() ?? 1) + $loop->index }}</td>
                     <td class="px-3 py-2">{{ \Illuminate\Support\Carbon::parse($inc->date)->format('d-F - Y') }}</td>
-                    <td class="px-3 py-2">{{ $inc->category }}</td>
-                    <td class="px-3 py-2">{{ $inc->note }}</td>
+                    @php([$__title,$__rest] = array_pad(preg_split('/\s+—\s+/', (string)($inc->note ?? ''), 2), 2, ''))
+                    <td class="px-3 py-2">{{ $__title }}</td>
+                    <td class="px-3 py-2">{{ $__rest }}</td>
                     <td class="px-3 py-2 text-right">{{ number_format($inc->amount, 2) }}</td>
+                    <td class="px-3 py-2">{{ $inc->addedBy->name ?? '-' }}</td>
                     @hasanyrole('Admin|Accountant')
                     <td class="px-3 py-2 text-right">
                         <div class="inline-flex items-center gap-2">
@@ -37,14 +40,14 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="px-3 py-6 text-center text-gray-500">No records</td>
+                    <td colspan="7" class="px-3 py-6 text-center text-gray-500">No records</td>
                 </tr>
             @endforelse
         </tbody>
         <tfoot>
             <tr class="border-t font-semibold">
                 <td></td>
-                <td colspan="3" class="px-3 py-2 text-right">Total</td>
+                <td colspan="4" class="px-3 py-2 text-right">Total</td>
                 <td class="px-3 py-2 text-right">{{ number_format($total, 2) }}</td>
                 @hasanyrole('Admin|Accountant')
                 <td></td>

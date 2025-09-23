@@ -4,9 +4,9 @@
             <tr class="text-left">
                 <th class="px-4 py-2 w-12">SL</th>
                 <th class="px-4 py-2">Date</th>
-                <th class="px-4 py-2">Category</th>
-                <th class="px-4 py-2">Amount</th>
+                <th class="px-4 py-2">Title</th>
                 <th class="px-4 py-2">Note</th>
+                <th class="px-4 py-2">Amount</th>
                 <th class="px-4 py-2">Added By</th>
                 <th class="px-4 py-2">Actions</th>
             </tr>
@@ -16,9 +16,10 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-4 py-2">{{ ($expenses->firstItem() ?? 1) + $loop->index }}</td>
                     <td class="px-4 py-2">{{ $e->date->format('d-M - Y') }}</td>
-                    <td class="px-4 py-2">{{ $e->category }}</td>
+                    @php([$__title, $__rest] = array_pad(preg_split('/\s+—\s+/',(string)($e->note??''),2),2,''))
+                    <td class="px-4 py-2">{{ $__title }}</td>
+                    <td class="px-4 py-2">{{ $__rest }}</td>
                     <td class="px-4 py-2 font-semibold">{{ number_format($e->amount,2) }}</td>
-                    <td class="px-4 py-2">{{ $e->note }}</td>
                     <td class="px-4 py-2">{{ $e->addedBy->name ?? '-' }}</td>
                     <td class="px-4 py-2">
                         <div class="flex flex-wrap items-center gap-2">
@@ -43,9 +44,10 @@
         </tbody>
         <tfoot>
             <tr class="border-t">
+                <td class="px-4 py-2 font-semibold"></td>
                 <td class="px-4 py-2 font-semibold" colspan="3">Total</td>
                 <td class="px-4 py-2 font-semibold">{{ number_format($total,2) }}</td>
-                <td colspan="3"></td>
+                <td colspan="2"></td>
             </tr>
         </tfoot>
     </table>

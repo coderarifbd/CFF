@@ -72,6 +72,8 @@ class DashboardController extends Controller
             $globalInvestReturn       = (float) Investment::where('status','returned')->sum('return_amount');
             $globalInvestInterest     = (float) InvestmentInterest::sum('amount');
             $globalExpenseAll         = (float) Cashbook::where('type','expense')->sum('amount');
+            $globalOtherExpenses      = (float) Cashbook::where('type','expense')
+                ->where('category','!=','Investment Outflow')->sum('amount');
             // Other income excludes system categories (case-insensitive) like in admin branch
             $systemIncomeCats = ['subscription','extra','fine','interest','investment return'];
             $placeholders = implode(',', array_fill(0, count($systemIncomeCats), '?'));
@@ -79,10 +81,12 @@ class DashboardController extends Controller
                 ->whereRaw('LOWER(category) NOT IN ('.$placeholders.')', $systemIncomeCats)
                 ->sum('amount');
 
-            $totalExpense = $globalExpenseAll; // show ALL expenses in KPI card
-            $remainingBalance = ($globalTotalReceipts + $globalInvestInterest)
-                + $globalInvestReturn + $globalOtherIncome
-                - $globalInvestOutflow - $globalExpenseAll;
+            // Show operational expenses only (exclude Invest Outflow)
+            $totalExpense = $globalOtherExpenses;
+            // Grand Total = Total Balance − Expense
+            $grandTotal = $totalBalance - $totalExpense;
+            // New rule: Remaining = Total Balance − Expense − Active Investment
+            $remainingBalance = $totalBalance - $totalExpense - $activeInvestAmount;
             // For consistency
             $cashBalance = $remainingBalance;
             $recentReceipts = DepositReceipt::with(['member','items'])
@@ -127,10 +131,12 @@ class DashboardController extends Controller
             // Reporting metrics (exclude returns from total balance)
             // Total Balance = Deposits + Interest + Other Income
             $totalBalance = $totalReceipts + $totalInvestInterest + $otherIncome;
-            // Show ALL expenses in the KPI card
-            $totalExpense = $expenseAll;
-            // Remaining Balance: Total (already includes Other Income) + Returns − Invest − Expense (all)
-            $remainingBalance = $totalBalance + $totalInvestReturn - $totalInvestOutflow - $expenseAll;
+            // Show operational expenses only (exclude Invest Outflow) in KPI
+            $totalExpense = $otherExpenses;
+            // Grand Total = Total Balance − Expense
+            $grandTotal = $totalBalance - $totalExpense;
+            // New rule: Remaining = Total Balance − Expense − Active Investment
+            $remainingBalance = $totalBalance - $totalExpense - $activeInvestAmount;
             // Backward compatibility for existing blade (if referenced)
             $cashBalance = $remainingBalance;
 
@@ -161,7 +167,8 @@ class DashboardController extends Controller
             'totalBalance',
             'remainingBalance',
             'totalExpense',
-            'otherIncome'
+            'otherIncome',
+            'grandTotal'
         ));
     }
 }

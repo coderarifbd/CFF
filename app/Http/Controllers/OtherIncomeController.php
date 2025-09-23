@@ -78,18 +78,21 @@ class OtherIncomeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'title' => ['required','string','max:150'],
             'date' => ['required','date'],
             'category' => ['required','string','max:100'],
             'amount' => ['required','numeric','min:0'],
             'note' => ['nullable','string','max:255'],
         ]);
 
+        $combinedNote = trim($data['title'] . (isset($data['note']) && $data['note'] !== '' ? ' — '.$data['note'] : ''));
+
         Cashbook::create([
             'date' => $data['date'],
             'type' => 'income',
             'category' => $data['category'],
             'amount' => $data['amount'],
-            'note' => $data['note'] ?? null,
+            'note' => $combinedNote,
             'added_by' => auth()->id(),
         ]);
 
@@ -107,13 +110,20 @@ class OtherIncomeController extends Controller
     {
         abort_unless($income->type === 'income', 404);
         $data = $request->validate([
+            'title' => ['required','string','max:150'],
             'date' => ['required','date'],
             'category' => ['required','string','max:100'],
             'amount' => ['required','numeric','min:0'],
             'note' => ['nullable','string','max:255'],
         ]);
 
-        $income->update($data);
+        $combinedNote = trim($data['title'] . (isset($data['note']) && $data['note'] !== '' ? ' — '.$data['note'] : ''));
+        $income->update([
+            'date' => $data['date'],
+            'category' => $data['category'],
+            'amount' => $data['amount'],
+            'note' => $combinedNote,
+        ]);
         return redirect()->route('other-incomes.index')->with('status','Income updated');
     }
 

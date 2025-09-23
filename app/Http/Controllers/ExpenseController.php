@@ -17,7 +17,9 @@ class ExpenseController extends Controller
 
     public function index()
     {
-        $query = Cashbook::where('type','expense')->latest('date');
+        $query = Cashbook::where('type','expense')
+            ->where('category','!=','Investment Outflow')
+            ->latest('date');
 
         if (request('category')) {
             $query->where('category', request('category'));
@@ -42,6 +44,7 @@ class ExpenseController extends Controller
 
         // Distinct categories for filter/dropdown
         $categories = Cashbook::where('type','expense')
+            ->where('category','!=','Investment Outflow')
             ->select('category')
             ->distinct()
             ->orderBy('category')
@@ -70,18 +73,22 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
+            'title' => ['required','string','max:150'],
             'date' => ['required','date'],
             'category' => ['required','string','max:100'],
             'amount' => ['required','numeric','min:0'],
             'note' => ['nullable','string','max:255'],
         ]);
 
+        // Persist title in the note column, optionally appending user's note
+        $combinedNote = trim($data['title'] . (isset($data['note']) && $data['note'] !== '' ? ' — '.$data['note'] : ''));
+
         Cashbook::create([
             'date' => $data['date'],
             'type' => 'expense',
             'category' => $data['category'],
             'amount' => $data['amount'],
-            'note' => $data['note'] ?? null,
+            'note' => $combinedNote,
             'added_by' => auth()->id(),
         ]);
 
@@ -99,13 +106,20 @@ class ExpenseController extends Controller
     {
         abort_unless($expense->type === 'expense', 404);
         $data = $request->validate([
+            'title' => ['required','string','max:150'],
             'date' => ['required','date'],
             'category' => ['required','string','max:100'],
             'amount' => ['required','numeric','min:0'],
             'note' => ['nullable','string','max:255'],
         ]);
 
-        $expense->update($data);
+        $combinedNote = trim($data['title'] . (isset($data['note']) && $data['note'] !== '' ? ' — '.$data['note'] : ''));
+        $expense->update([
+            'date' => $data['date'],
+            'category' => $data['category'],
+            'amount' => $data['amount'],
+            'note' => $combinedNote,
+        ]);
         return redirect()->route('expenses.index')->with('status','Expense updated');
     }
 
