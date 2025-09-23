@@ -323,6 +323,12 @@ class DepositController extends Controller
         // As per rule: after expenses, total company balance is divided equally. So member's balance incl. share = equalShare
         $myWithShare = $equalShare;
 
+        // Year range for filters (align with index/create)
+        $minDate = DepositReceipt::min('date');
+        $maxDate = DepositReceipt::max('date');
+        $yearStart = $minDate ? (int) date('Y', strtotime($minDate)) : 2019;
+        $yearEnd = max((int) date('Y'), $maxDate ? (int) date('Y', strtotime($maxDate)) : (int) date('Y')) + 1;
+
         return view('deposits.my', compact(
             'member','receipts','subscriptionSum','extraSum','fineSum','myDeposit','myNet','companyBalance','activeMembers','equalShare','yearStart','yearEnd'
         ));
