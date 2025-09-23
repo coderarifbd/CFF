@@ -19,7 +19,10 @@
     </style>
 </head>
 <body>
-    <h1>CFF - Reports</h1>
+    <div style="text-align:center; margin-bottom: 8px;">
+        <img src="{{ public_path('images/cff-logo.png') }}" alt="CFF" style="height: 60px; object-fit: contain;" />
+    </div>
+    <h1 style="text-align:center;">CFF - Reports</h1>
     <div class="meta">
         @php($range = trim((!empty($start) ? \Carbon\Carbon::parse($start)->format('d-M - Y') : '—'). ' to ' . (!empty($end) ? \Carbon\Carbon::parse($end)->format('d-M - Y') : '—')))
         <strong>Date Range:</strong> {{ $range }}<br>

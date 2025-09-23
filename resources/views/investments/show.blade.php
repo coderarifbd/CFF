@@ -97,6 +97,9 @@
                                         <th class="px-4 py-2">Amount</th>
                                         <th class="px-4 py-2">Note</th>
                                         <th class="px-4 py-2">Added By</th>
+                                        @hasanyrole('Admin|Accountant')
+                                        <th class="px-4 py-2">Actions</th>
+                                        @endhasanyrole
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -106,6 +109,11 @@
                                             <td class="px-4 py-2">{{ number_format($it->amount, 2) }}</td>
                                             <td class="px-4 py-2">{{ $it->note }}</td>
                                             <td class="px-4 py-2">{{ $it->addedBy->name ?? '-' }}</td>
+                                            @hasanyrole('Admin|Accountant')
+                                            <td class="px-4 py-2">
+                                                <a href="{{ route('investments.interest.edit', [$investment, $it]) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
+                                            </td>
+                                            @endhasanyrole
                                         </tr>
                                     @empty
                                         <tr>

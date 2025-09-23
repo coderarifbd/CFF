@@ -16,10 +16,10 @@ class InvestmentController extends Controller
     public function __construct()
     {
         $this->middleware(['auth']);
-        // Admin has full control
+        // Admin has full control over investments
         $this->middleware(['role:Admin'])->only(['create','store','edit','update','destroy','markReturned']);
-        // Admin + Accountant can view list, show and add interest
-        $this->middleware(['role:Admin|Accountant'])->only(['index','show','storeInterest']);
+        // Admin + Accountant can view list/show and manage interests (add/edit/update)
+        $this->middleware(['role:Admin|Accountant'])->only(['index','show','storeInterest','editInterest','updateInterest']);
     }
 
     /**
@@ -230,5 +230,41 @@ class InvestmentController extends Controller
         ]);
 
         return redirect()->route('investments.show', $investment)->with('status','Investment marked as returned');
+    }
+
+    /**
+     * Show edit form for a specific interest (Admin + Accountant)
+     */
+    public function editInterest(Investment $investment, InvestmentInterest $interest)
+    {
+        // Ensure relationship
+        abort_if($interest->investment_id !== $investment->id, 404);
+        return view('investments.interest_edit', compact('investment','interest'));
+    }
+
+    /**
+     * Update a specific interest and sync its cashbook record
+     */
+    public function updateInterest(Request $request, Investment $investment, InvestmentInterest $interest)
+    {
+        abort_if($interest->investment_id !== $investment->id, 404);
+        $data = $request->validate([
+            'date' => ['required','date'],
+            'amount' => ['required','numeric','min:0'],
+            'note' => ['nullable','string','max:255'],
+        ]);
+
+        $interest->update($data);
+
+        // Update linked cashbook row
+        Cashbook::where('reference_type', InvestmentInterest::class)
+            ->where('reference_id', $interest->id)
+            ->update([
+                'date' => $data['date'],
+                'amount' => $data['amount'],
+                'note' => $data['note'] ?? null,
+            ]);
+
+        return redirect()->route('investments.show', $investment)->with('status','Interest updated');
     }
 }

@@ -50,6 +50,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('investments', InvestmentController::class);
     // Add interest (Admin + Accountant)
     Route::post('investments/{investment}/interest', [InvestmentController::class, 'storeInterest'])->name('investments.interest.store');
+    // Edit/Update interest (Admin + Accountant)
+    Route::get('investments/{investment}/interest/{interest}/edit', [InvestmentController::class, 'editInterest'])->name('investments.interest.edit');
+    Route::put('investments/{investment}/interest/{interest}', [InvestmentController::class, 'updateInterest'])->name('investments.interest.update');
     // Mark as returned (Admin only)
     Route::post('investments/{investment}/return', [InvestmentController::class, 'markReturned'])->name('investments.return');
 
