@@ -35,6 +35,9 @@ Route::middleware('auth')->group(function () {
     // Deposit helpers: keep BEFORE resource route to avoid capture by deposits/{id}
     Route::get('deposits/last-month', [DepositController::class, 'lastMonth'])->name('deposits.last-month');
     Route::get('deposits/history', [DepositController::class, 'history'])->name('deposits.history');
+    // Bulk deposit (Admin + Accountant)
+    Route::get('deposits/bulk-create', [DepositController::class, 'bulkCreate'])->name('deposits.bulk-create');
+    Route::post('deposits/bulk-store', [DepositController::class, 'bulkStore'])->name('deposits.bulk-store');
     // Deposits (override parameter name to avoid legacy model binding)
     Route::resource('deposits', DepositController::class)->parameters(['deposits' => 'id']);
 

@@ -36,9 +36,12 @@
                         <button class="bg-blue-600 text-white px-4 py-2 rounded">Filter</button>
                     </form>
 
-                    @auth
-                    <button type="button" @click="modalOpen = true; $nextTick(()=>window.dispatchEvent(new CustomEvent('modal-opened')));" class="bg-green-600 text-white px-4 py-2 rounded">+ Add Deposit</button>
-                    @endauth
+                    @hasanyrole('Admin|Accountant')
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('deposits.bulk-create') }}" class="bg-indigo-600 text-white px-4 py-2 rounded">+ Bulk Deposit</a>
+                        <button type="button" @click="modalOpen = true; $nextTick(()=>window.dispatchEvent(new CustomEvent('modal-opened')));" class="bg-green-600 text-white px-4 py-2 rounded">+ Add Deposit</button>
+                    </div>
+                    @endhasanyrole
                 </div>
 
                 <div class="mb-4 text-xs text-gray-600">
@@ -163,11 +166,7 @@
 
                         <div id="modal_deposit_history" class="hidden mt-3">
                             <div class="flex items-center justify-between mb-2">
-                                <h4 class="text-sm font-semibold text-gray-700">Last 12 Months</h4>
-                                <div class="flex items-center gap-2">
-                                    <button type="button" id="modal_hist_prev" class="px-2 py-1 rounded border text-xs">‹</button>
-                                    <button type="button" id="modal_hist_next" class="px-2 py-1 rounded border text-xs">›</button>
-                                </div>
+                                <h4 class="text-sm font-semibold text-gray-700">Last 4 Months (based on selected date)</h4>
                             </div>
                             <div class="overflow-x-auto">
                                 <div id="modal_hist_track" class="flex gap-2 min-w-max"></div>
@@ -175,53 +174,7 @@
                             <p class="mt-2 text-xs text-gray-500">Green = Paid subscription. Red = Due (no subscription recorded).</p>
                         </div>
 
-                        <div id="modal_last_month_summary" class="hidden mt-2">
-                            <div class="rounded-lg border border-gray-200 p-4 bg-gray-50">
-                                <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-                                    <div class="flex items-center gap-2">
-                                        <h3 class="text-sm font-semibold text-gray-700">Payment Summary</h3>
-                                        <span id="modal_lms_period" class="text-xs text-gray-500"></span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <button type="button" id="modal_lms_prev" class="px-2 py-1 rounded border text-xs">Prev</button>
-                                        <select id="modal_lms_month" class="border rounded px-2 py-1 text-sm">
-                                            <option value="1">Jan</option>
-                                            <option value="2">Feb</option>
-                                            <option value="3">Mar</option>
-                                            <option value="4">Apr</option>
-                                            <option value="5">May</option>
-                                            <option value="6">Jun</option>
-                                            <option value="7">Jul</option>
-                                            <option value="8">Aug</option>
-                                            <option value="9">Sep</option>
-                                            <option value="10">Oct</option>
-                                            <option value="11">Nov</option>
-                                            <option value="12">Dec</option>
-                                        </select>
-                                        <select id="modal_lms_year" class="border rounded px-2 py-1 text-sm"></select>
-                                        <button type="button" id="modal_lms_next" class="px-2 py-1 rounded border text-xs">Next</button>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-3 gap-3 text-sm">
-                                    <div>
-                                        <p class="text-gray-500">Subscription</p>
-                                        <p id="modal_lms_sub" class="font-semibold tabular-nums">—</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-500">Extra</p>
-                                        <p id="modal_lms_extra" class="font-semibold tabular-nums">—</p>
-                                    </div>
-                                    <div>
-                                        <p class="text-gray-500">Fine</p>
-                                        <p id="modal_lms_fine" class="font-semibold tabular-nums">—</p>
-                                    </div>
-                                </div>
-                                <div class="mt-3 text-right text-sm">
-                                    <span class="text-gray-600">Total: </span>
-                                    <span id="modal_lms_total" class="font-semibold tabular-nums">—</span>
-                                </div>
-                            </div>
-                        </div>
+                        
 
                         <div class="space-y-3">
                             <label class="block text-sm font-medium text-gray-700">Type</label>
@@ -291,84 +244,47 @@
     (function(){
         const sel = document.getElementById('modal_member_id');
         if(!sel) return;
-        const box = document.getElementById('modal_last_month_summary');
-        const hist = { box: document.getElementById('modal_deposit_history'), track: document.getElementById('modal_hist_track'), prev: document.getElementById('modal_hist_prev'), next: document.getElementById('modal_hist_next') };
-        const el = {
-            period: document.getElementById('modal_lms_period'),
-            sub: document.getElementById('modal_lms_sub'),
-            extra: document.getElementById('modal_lms_extra'),
-            fine: document.getElementById('modal_lms_fine'),
-            total: document.getElementById('modal_lms_total'),
-            month: document.getElementById('modal_lms_month'),
-            year: document.getElementById('modal_lms_year'),
-            prev: document.getElementById('modal_lms_prev'),
-            next: document.getElementById('modal_lms_next'),
-        };
+        const dateInput = document.querySelector('input[name="date"]');
+        const hist = { box: document.getElementById('modal_deposit_history'), track: document.getElementById('modal_hist_track') };
         const fmt = (n)=> new Intl.NumberFormat(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}).format(n||0);
-        function setDefaultPeriod(){
-            const now = new Date();
-            const d = new Date(now.getFullYear(), now.getMonth()-1, 1);
-            if(el.month) el.month.value = String(d.getMonth()+1);
-            if(el.year && el.year.options.length===0){
-                const start = now.getFullYear()-5, end = now.getFullYear()+1;
-                for(let y=start;y<=end;y++){ const opt=document.createElement('option'); opt.value=String(y); opt.textContent=String(y); el.year.appendChild(opt);} }
-            if(el.year) el.year.value = String(d.getFullYear());
-        }
-        async function loadSummary(){
-            const memberId = sel.value; if(!memberId){ box.classList.add('hidden'); return; }
-            const month = el.month ? el.month.value : ''; const year = el.year ? el.year.value : '';
-            try{
-                const q = new URLSearchParams({ member_id: memberId }); if(month) q.set('month', month); if(year) q.set('year', year);
-                const res = await fetch(`{{ route('deposits.last-month') }}?${q.toString()}`, { headers: { 'X-Requested-With':'XMLHttpRequest' }});
-                if(!res.ok) throw new Error('Last-month fetch failed: '+res.status);
-                const d = await res.json();
-                if(el.period) el.period.textContent = `${d.year}-${String(d.month).padStart(2,'0')}`;
-                if(el.sub) el.sub.textContent = fmt(d.subscription);
-                if(el.extra) el.extra.textContent = fmt(d.extra);
-                if(el.fine) el.fine.textContent = fmt(d.fine);
-                if(el.total) el.total.textContent = fmt(d.total);
-                box.classList.remove('hidden');
-            }catch(e){ console.error(e); box.classList.add('hidden'); }
-        }
+        const mon = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         async function loadHistory(){
             const memberId = sel.value; if(!memberId){ hist.box.classList.add('hidden'); return; }
+            // Determine end month/year from selected date (use month before selected date)
+            let endMonth, endYear;
+            if (dateInput && dateInput.value) {
+                const d = new Date(dateInput.value);
+                if (!isNaN(d)) {
+                    let m = d.getMonth() + 1; // 1..12
+                    let y = d.getFullYear();
+                    m = m - 1; if (m < 1) { m = 12; y = y - 1; }
+                    endMonth = m; endYear = y;
+                }
+            }
             try{
-                const res = await fetch(`{{ route('deposits.history') }}?member_id=${memberId}&months=12`, { headers: { 'X-Requested-With':'XMLHttpRequest' }});
+                const params = new URLSearchParams({ member_id: memberId, months: '4' });
+                if (endMonth && endYear) { params.set('end_month', String(endMonth)); params.set('end_year', String(endYear)); }
+                const res = await fetch(`{{ route('deposits.history') }}?${params.toString()}`, { headers: { 'X-Requested-With':'XMLHttpRequest' }});
                 if(!res.ok) throw new Error('History fetch failed: '+res.status);
                 const data = await res.json();
                 hist.track.innerHTML='';
                 (data.items||[]).forEach(item=>{
                     const card=document.createElement('div');
                     card.className = `rounded-lg border px-3 py-2 text-xs w-28 ${item.due ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`;
-                    card.innerHTML = `<div class=\"font-semibold\">${item.label}</div>
+                    const label = (item.month && item.year) ? `${mon[(item.month-1+12)%12]} ${item.year}` : (item.label||'');
+                    card.innerHTML = `<div class=\"font-semibold\">${label}</div>
                                       <div>Sub: <span class=\"tabular-nums\">${fmt(item.subscription)}</span></div>`;
                     hist.track.appendChild(card);
                 });
                 hist.box.classList.remove('hidden');
             }catch(e){ console.error(e); hist.box.classList.add('hidden'); }
         }
-        function bindNav(){
-            const sc = document.getElementById('modal_deposit_history').querySelector('.overflow-x-auto');
-            hist.prev && hist.prev.addEventListener('click', ()=> sc.scrollBy({ left: -200, behavior: 'smooth' }));
-            hist.next && hist.next.addEventListener('click', ()=> sc.scrollBy({ left: +200, behavior: 'smooth' }));
-            el.month && el.month.addEventListener('change', loadSummary);
-            el.year && el.year.addEventListener('change', loadSummary);
-            el.prev && el.prev.addEventListener('click', ()=>{
-                const m=parseInt(el.month.value,10); let y=parseInt(el.year.value,10); let nm=m-1; if(nm<1){ nm=12; y=y-1; }
-                el.month.value=String(nm); el.year.value=String(y); loadSummary();
-            });
-            el.next && el.next.addEventListener('click', ()=>{
-                const m=parseInt(el.month.value,10); let y=parseInt(el.year.value,10); let nm=m+1; if(nm>12){ nm=1; y=y+1; }
-                el.month.value=String(nm); el.year.value=String(y); loadSummary();
-            });
-        }
-        setDefaultPeriod();
-        if(sel && sel.value){ loadSummary(); loadHistory(); }
-        sel.addEventListener('change', ()=>{ loadSummary(); loadHistory(); });
-        bindNav();
+        if(sel && sel.value){ loadHistory(); }
+        sel.addEventListener('change', ()=>{ loadHistory(); });
+        if (dateInput) { dateInput.addEventListener('change', ()=>{ loadHistory(); }); }
         // If using Alpine modalOpen flag, refresh when the modal opens
         document.addEventListener('alpine:init', () => {
-            document.addEventListener('modal-opened', () => { if(sel.value){ loadSummary(); loadHistory(); } });
+            document.addEventListener('modal-opened', () => { if(sel.value){ loadHistory(); } });
         });
     })();
 </script>

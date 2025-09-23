@@ -22,6 +22,13 @@ class ActivityLogController extends Controller
         if ($request->filled('user_id')) {
             $query->where('user_id', $request->user_id);
         }
+        // Optional: filter by a specific entry (used by "View History" links)
+        if ($request->filled('model_type')) {
+            $query->where('model_type', $request->model_type);
+        }
+        if ($request->filled('model_id')) {
+            $query->where('model_id', $request->model_id);
+        }
         // Date range filter (created_at)
         if ($request->filled('start')) {
             $query->whereDate('created_at', '>=', $request->start);
@@ -31,6 +38,12 @@ class ActivityLogController extends Controller
         }
 
         $logs = $query->paginate(20)->withQueryString();
-        return view('activity_logs.index', compact('logs'));
+        return view('activity_logs.index', [
+            'logs' => $logs,
+            'entryFilter' => [
+                'model_type' => $request->model_type,
+                'model_id' => $request->model_id,
+            ],
+        ]);
     }
 }

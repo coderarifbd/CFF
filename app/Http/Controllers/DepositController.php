@@ -18,7 +18,7 @@ class DepositController extends Controller
     {
         $this->middleware(['auth']);
         // Admin + Accountant can create/store
-        $this->middleware(['role:Admin|Accountant'])->only(['create','store','index','show']);
+        $this->middleware(['role:Admin|Accountant'])->only(['create','store','index','show','bulkCreate','bulkStore']);
         // Only Admin can edit/update/destroy
         $this->middleware(['role:Admin'])->only(['edit','update','destroy']);
     }
@@ -92,6 +92,89 @@ class DepositController extends Controller
         $yearStart = $minDate ? (int) date('Y', strtotime($minDate)) : 2019;
         $yearEnd = max((int) date('Y'), $maxDate ? (int) date('Y', strtotime($maxDate)) : (int) date('Y')) + 1;
         return view('deposits.create', compact('members','yearStart','yearEnd'));
+    }
+
+    /**
+     * Bulk create deposits for multiple members with the same date/type/amount.
+     * (Admin + Accountant)
+     */
+    public function bulkCreate()
+    {
+        // Exclude suspended members from selection
+        $members = Member::where('status','!=','suspended')->orderBy('name')->get(['id','name']);
+        // Year range (optional helper for UI hint)
+        $minDate = DepositReceipt::min('date');
+        $maxDate = DepositReceipt::max('date');
+        $yearStart = $minDate ? (int) date('Y', strtotime($minDate)) : 2019;
+        $yearEnd = max((int) date('Y'), $maxDate ? (int) date('Y', strtotime($maxDate)) : (int) date('Y')) + 1;
+        return view('deposits.bulk_create', compact('members','yearStart','yearEnd'));
+    }
+
+    /**
+     * Persist bulk deposits.
+     */
+    public function bulkStore(Request $request)
+    {
+        $validated = $request->validate([
+            'date' => ['required','date'],
+            'payment_method' => ['required','in:cash,bank,mobile'],
+            'type' => ['required','in:subscription,extra,fine'],
+            'amount' => ['required','numeric','min:0.01'],
+            'member_ids' => ['required','array','min:1'],
+            'member_ids.*' => ['exists:members,id'],
+            'note' => ['nullable','string','max:255'],
+        ]);
+
+        $created = 0; $skipped = [];
+        foreach ($validated['member_ids'] as $memberId) {
+            // Prevent duplicate subscription for the month
+            if ($validated['type'] === 'subscription') {
+                $exists = DepositReceipt::where('member_id', $memberId)
+                    ->whereYear('date', date('Y', strtotime($validated['date'])))
+                    ->whereMonth('date', date('m', strtotime($validated['date'])))
+                    ->whereHas('items', fn($q)=>$q->where('type','subscription'))
+                    ->exists();
+                if ($exists) { $skipped[] = (int)$memberId; continue; }
+            }
+
+            $receipt = DepositReceipt::create([
+                'date' => $validated['date'],
+                'member_id' => $memberId,
+                'total_amount' => (float)$validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'note' => $validated['note'] ?? null,
+                'added_by' => auth()->id(),
+            ]);
+
+            $receipt->items()->create([
+                'type' => $validated['type'],
+                'amount' => (float)$validated['amount'],
+            ]);
+
+            Cashbook::create([
+                'date' => $receipt->date,
+                'type' => 'income',
+                'category' => match($validated['type']){
+                    'subscription' => 'Subscription',
+                    'extra' => 'Extra',
+                    'fine' => 'Fine',
+                    default => 'Other',
+                },
+                'amount' => (float)$validated['amount'],
+                'reference_type' => DepositReceipt::class,
+                'reference_id' => $receipt->id,
+                'note' => $receipt->note,
+                'added_by' => auth()->id(),
+            ]);
+
+            $created++;
+        }
+
+        $msg = "$created deposits created.";
+        if (!empty($skipped)) {
+            $msg .= ' Skipped for member IDs: '.implode(',', $skipped).' (duplicate subscription in same month).';
+        }
+        return redirect()->route('deposits.index')->with('status', $msg);
     }
 
     /**

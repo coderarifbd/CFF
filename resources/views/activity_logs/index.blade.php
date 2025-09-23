@@ -35,6 +35,16 @@
                     </form>
                 </div>
 
+                @if(!empty($entryFilter['model_type']) && !empty($entryFilter['model_id']))
+                <div class="px-6 py-3 bg-indigo-50 border-b border-indigo-100 text-sm flex items-center justify-between">
+                    <div>
+                        <span class="font-semibold text-indigo-800">Entry History:</span>
+                        <span class="text-indigo-700">Filtered to a specific entry ({{ class_basename($entryFilter['model_type']) }} #{{ $entryFilter['model_id'] }})</span>
+                    </div>
+                    <a href="{{ route('activity-logs.index') }}" class="px-3 py-1.5 rounded border border-indigo-200 text-indigo-800 hover:bg-indigo-100">Clear Entry Filter</a>
+                </div>
+                @endif
+
                 <div class="overflow-x-auto">
                     <table class="min-w-full table-auto text-sm">
                         <thead>
@@ -109,7 +119,12 @@
                                     <td class="px-4 py-2 whitespace-nowrap">{{ optional($log->created_at)->format('d-M - Y H:i:s') }}</td>
                                     <td class="px-4 py-2">{{ $log->user->name ?? '-' }} ({{ $log->user_id ?? '-' }})</td>
                                     <td class="px-4 py-2">{{ $page }}</td>
-                                    <td class="px-4 py-2">{{ $entry }}</td>
+                                    <td class="px-4 py-2">
+                                        <div class="flex items-center gap-2">
+                                            <span>{{ $entry }}</span>
+                                            <a href="{{ route('activity-logs.index', array_filter(array_merge(request()->only(['action','user_id','start','end']), ['model_type'=>$log->model_type,'model_id'=>$log->model_id]))) }}" class="text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 border">View History</a>
+                                        </div>
+                                    </td>
                                     <td class="px-4 py-2">{{ ucfirst($log->action) }}</td>
                                     <td class="px-4 py-2">
                                         @if(empty($diffs))
