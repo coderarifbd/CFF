@@ -27,7 +27,7 @@
                             <div>
                                 <p class="text-[11px] uppercase tracking-[.14em] text-white">Total Balance</p>
                                 <p class="text-4xl font-extrabold mt-1 tabular-nums">{{ $money($totalBalance ?? 0) }}</p>
-                                <p class="text-xs text-slate-400 mt-1">Deposits + Interest</p>
+                                <p class="text-xs text-slate-400 mt-1">Deposits + Interest + Other Income</p>
                             </div>
                             <div class="w-11 h-11 rounded-xl bg-white/10 grid place-items-center text-lg">💰</div>
                         </div>

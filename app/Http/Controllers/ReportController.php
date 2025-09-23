@@ -20,8 +20,8 @@ class ReportController extends Controller
     {
         $start = $request->date('start_date');
         $end   = $request->date('end_date');
-        $types = collect((array) $request->input('types', ['deposit','interest','other_income','expense']))
-            ->intersect(['deposit','interest','other_income','expense'])
+        $types = collect((array) $request->input('types', ['deposit','interest','invest_out','invest_return','other_income','expense']))
+            ->intersect(['deposit','interest','invest_out','invest_return','other_income','expense'])
             ->values();
 
         $items = collect();
@@ -44,6 +44,44 @@ class ReportController extends Controller
                 ];
             });
             $items = $items->concat($depositRows);
+        }
+
+        // Investment Outflow
+        if ($types->contains('invest_out')) {
+            $q = \App\Models\Investment::query();
+            if ($start) $q->whereDate('date', '>=', $start);
+            if ($end)   $q->whereDate('date', '<=', $end);
+            $invests = $q->orderBy('date')->get();
+            $rowsOut = $invests->map(function($inv){
+                return [
+                    'date' => $inv->date ? $inv->date->format('Y-m-d') : null,
+                    'type' => 'invest_out',
+                    'label' => 'Investment Outflow: '.($inv->title ?? '—'),
+                    'in' => 0.0,
+                    'out' => (float) $inv->amount,
+                    'meta' => [ 'id' => $inv->id ],
+                ];
+            });
+            $items = $items->concat($rowsOut);
+        }
+
+        // Investment Return
+        if ($types->contains('invest_return')) {
+            $qr = \App\Models\Investment::query()->whereNotNull('return_amount');
+            if ($start) $qr->whereDate('return_date', '>=', $start);
+            if ($end)   $qr->whereDate('return_date', '<=', $end);
+            $returns = $qr->orderBy('return_date')->get();
+            $rowsRet = $returns->map(function($inv){
+                return [
+                    'date' => $inv->return_date ? $inv->return_date->format('Y-m-d') : null,
+                    'type' => 'invest_return',
+                    'label' => 'Investment Return: '.($inv->title ?? '—'),
+                    'in' => (float) $inv->return_amount,
+                    'out' => 0.0,
+                    'meta' => [ 'id' => $inv->id ],
+                ];
+            });
+            $items = $items->concat($rowsRet);
         }
 
         // Investment Interest (income)
@@ -111,6 +149,32 @@ class ReportController extends Controller
         $totalIn  = $items->sum('in');
         $totalOut = $items->sum('out');
         $balance  = $totalIn - $totalOut;
+
+        // PDF export (requires barryvdh/laravel-dompdf installed)
+        if ($request->get('export') === 'pdf') {
+            if (class_exists('Dompdf\\Dompdf')) {
+                $html = view('reports.pdf', [
+                    'items' => $items,
+                    'totalIn' => $totalIn,
+                    'totalOut' => $totalOut,
+                    'balance' => $balance,
+                    'start' => $start?->format('Y-m-d'),
+                    'end' => $end?->format('Y-m-d'),
+                    'types' => $types->all(),
+                ])->render();
+
+                $dompdf = new \Dompdf\Dompdf([ 'isRemoteEnabled' => true ]);
+                $dompdf->loadHtml($html);
+                $dompdf->setPaper('A4', 'portrait');
+                $dompdf->render();
+                $filename = 'report_'.now()->format('Ymd_His').'.pdf';
+                return response($dompdf->output(), 200, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="'.$filename.'"'
+                ]);
+            }
+            return back()->with('status', 'PDF export not available. Please install barryvdh/laravel-dompdf.');
+        }
 
         // CSV export
         if ($request->get('export') === 'csv') {

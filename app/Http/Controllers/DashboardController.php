@@ -62,9 +62,9 @@ class DashboardController extends Controller
                 ->whereNotIn('category', $systemIncomeCats)
                 ->sum('amount');
 
-            // Reporting metrics
+            // Reporting metrics (Total Balance = Deposits + Interest + Other Income)
             // Keep member-specific cards for deposit/fine/extra
-            $totalBalance = $totalReceipts + $totalInvestInterest; // member deposits + global interest (as currently shown)
+            $totalBalance = $totalReceipts + $totalInvestInterest + $otherIncome;
 
             // But compute Remaining Balance the same way as before (using GLOBAL totals)
             $globalTotalReceipts      = (float) DepositReceipt::sum('total_amount');
@@ -125,11 +125,12 @@ class DashboardController extends Controller
                 ->sum('amount');
 
             // Reporting metrics (exclude returns from total balance)
-            $totalBalance = $totalReceipts + $totalInvestInterest; // deposits + interest
+            // Total Balance = Deposits + Interest + Other Income
+            $totalBalance = $totalReceipts + $totalInvestInterest + $otherIncome;
             // Show ALL expenses in the KPI card
             $totalExpense = $expenseAll;
-            // Remaining Balance: Total + Returns + OtherIncome − Invest − Expense (all)
-            $remainingBalance = $totalBalance + $totalInvestReturn + $otherIncome - $totalInvestOutflow - $expenseAll;
+            // Remaining Balance: Total (already includes Other Income) + Returns − Invest − Expense (all)
+            $remainingBalance = $totalBalance + $totalInvestReturn - $totalInvestOutflow - $expenseAll;
             // Backward compatibility for existing blade (if referenced)
             $cashBalance = $remainingBalance;
 

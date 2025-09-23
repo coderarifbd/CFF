@@ -54,7 +54,8 @@ class DepositController extends Controller
         $maxDate = DepositReceipt::max('date');
         $yearStart = $minDate ? (int) date('Y', strtotime($minDate)) : 2019;
         $yearEnd = max((int) date('Y'), $maxDate ? (int) date('Y', strtotime($maxDate)) : (int) date('Y')) + 1; // allow next year
-        $members = Member::orderBy('name')->get(['id','name']);
+        // Exclude suspended members from selection lists
+        $members = Member::where('status','!=','suspended')->orderBy('name')->get(['id','name']);
 
         $totalAmount = (clone $query)->sum('total_amount');
         $fineTotal = (clone $query)->cloneWithout(['orders'])->whereHas('items', fn($q)=>$q->where('type','fine'))->withSum(['items as fine_sum' => fn($q)=>$q->where('type','fine')],'amount')->get()->sum('fine_sum');
@@ -84,7 +85,8 @@ class DepositController extends Controller
      */
     public function create()
     {
-        $members = Member::orderBy('name')->get(['id','name']);
+        // Exclude suspended members from selection
+        $members = Member::where('status','!=','suspended')->orderBy('name')->get(['id','name']);
         $minDate = DepositReceipt::min('date');
         $maxDate = DepositReceipt::max('date');
         $yearStart = $minDate ? (int) date('Y', strtotime($minDate)) : 2019;
@@ -197,7 +199,8 @@ class DepositController extends Controller
     public function edit($id)
     {
         $receipt = DepositReceipt::with('items')->findOrFail($id);
-        $members = Member::orderBy('name')->get(['id','name']);
+        // Exclude suspended members from selection
+        $members = Member::where('status','!=','suspended')->orderBy('name')->get(['id','name']);
         $settings = Setting::first();
         return view('deposits.receipt_edit', [
             'receipt' => $receipt,
