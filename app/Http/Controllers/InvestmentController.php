@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Investment;
 use App\Models\InvestmentInterest;
 use App\Models\Cashbook;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreInvestmentRequest;
@@ -16,10 +17,10 @@ class InvestmentController extends Controller
     public function __construct()
     {
         $this->middleware(['auth']);
-        // Admin can edit/update/destroy investments and edit existing interests
-        $this->middleware(['role:Admin'])->only(['edit','update','destroy','editInterest','updateInterest']);
-        // Admin + Accountant can: list/show, create/store investments, add interest, and mark returned
-        $this->middleware(['role:Admin|Accountant'])->only(['index','show','create','store','storeInterest','markReturned']);
+        // Admin can edit/update/destroy investments
+        $this->middleware(['role:Admin'])->only(['edit','update','destroy']);
+        // Admin + Accountant can: list/show, create/store investments, add interest, mark returned, and access interest edit routes (gated inside by Setting flag for accountants)
+        $this->middleware(['role:Admin|Accountant'])->only(['index','show','create','store','storeInterest','markReturned','editInterest','updateInterest']);
     }
 
     /**
@@ -239,6 +240,11 @@ class InvestmentController extends Controller
     {
         // Ensure relationship
         abort_if($interest->investment_id !== $investment->id, 404);
+        // Tools toggle: block Accountant if not enabled
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_investment_interest;
+            abort_unless($enabled, 403);
+        }
         return view('investments.interest_edit', compact('investment','interest'));
     }
 
@@ -248,6 +254,11 @@ class InvestmentController extends Controller
     public function updateInterest(Request $request, Investment $investment, InvestmentInterest $interest)
     {
         abort_if($interest->investment_id !== $investment->id, 404);
+        // Tools toggle: block Accountant if not enabled
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_investment_interest;
+            abort_unless($enabled, 403);
+        }
         $data = $request->validate([
             'date' => ['required','date'],
             'amount' => ['required','numeric','min:0'],

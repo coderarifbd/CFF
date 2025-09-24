@@ -8,6 +8,7 @@ use App\Models\DepositItem;
 use App\Models\Member;
 use App\Models\Cashbook;
 use App\Models\Setting;
+use App\Models\Setting as AppSetting;
 use App\Models\InvestmentInterest;
 use Illuminate\Http\Request;
 // use App\Http\Requests\StoreDepositRequest; // switched to dynamic validation in controller to support multi-type submission
@@ -20,8 +21,9 @@ class DepositController extends Controller
         $this->middleware(['auth']);
         // Admin + Accountant can create/store
         $this->middleware(['role:Admin|Accountant'])->only(['create','store','index','show','bulkCreate','bulkStore']);
-        // Only Admin can edit/update/destroy
-        $this->middleware(['role:Admin'])->only(['edit','update','destroy']);
+        // Admin can edit/update/destroy; Accountant can edit/update when enabled via Tools
+        $this->middleware(['role:Admin|Accountant'])->only(['edit','update']);
+        $this->middleware(['role:Admin'])->only(['destroy']);
     }
 
     /**
@@ -284,6 +286,11 @@ class DepositController extends Controller
     public function edit($id)
     {
         $receipt = DepositReceipt::with('items')->findOrFail($id);
+        // Tools toggle: if Accountant, require allow_accountant_edit_deposits
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_deposits;
+            abort_unless($enabled, 403);
+        }
         // Exclude suspended members from selection
         $members = Member::where('status','!=','suspended')->orderBy('name')->get(['id','name']);
         $settings = Setting::first();
@@ -301,6 +308,11 @@ class DepositController extends Controller
     public function update(Request $request, $id)
     {
         $receipt = DepositReceipt::with('items')->findOrFail($id);
+        // Tools toggle: if Accountant, require allow_accountant_edit_deposits
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_deposits;
+            abort_unless($enabled, 403);
+        }
 
         $validated = $request->validate([
             'date' => ['required','date'],

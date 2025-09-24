@@ -45,6 +45,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:Admin')->group(function(){
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        // Settings > Tools (feature toggles)
+        Route::get('/settings/tools', [SettingsController::class, 'tools'])->name('settings.tools');
+        Route::post('/settings/tools', [SettingsController::class, 'updateTools'])->name('settings.tools.update');
         // Reports
         Route::get('/settings/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
     });

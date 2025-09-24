@@ -55,8 +55,11 @@
                                 </a>
                             </x-slot>
                             <x-slot name="content">
-                                <x-dropdown-link :href="route('settings.index')" class="{{ request()->routeIs('settings.*') ? 'font-semibold text-gray-900' : '' }}">
+                                <x-dropdown-link :href="route('settings.index')" class="{{ request()->routeIs('settings.index') ? 'font-semibold text-gray-900' : '' }}">
                                     {{ __('General Settings') }}
+                                </x-dropdown-link>
+                                <x-dropdown-link :href="route('settings.tools')" class="{{ request()->routeIs('settings.tools') ? 'font-semibold text-gray-900' : '' }}">
+                                    {{ __('Tools') }}
                                 </x-dropdown-link>
                                 <x-dropdown-link :href="route('reports.index')" class="{{ request()->routeIs('reports.*') ? 'font-semibold text-gray-900' : '' }}">
                                     {{ __('Reports') }}

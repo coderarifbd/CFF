@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cashbook;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class OtherIncomeController extends Controller
@@ -10,9 +11,9 @@ class OtherIncomeController extends Controller
     public function __construct()
     {
         $this->middleware(['auth']);
-        // Admin + Accountant can view and add; only Admin can edit/update/delete
-        $this->middleware(['role:Admin|Accountant'])->only(['index','create','store']);
-        $this->middleware(['role:Admin'])->only(['edit','update','destroy']);
+        // Admin + Accountant can view and add; edit/update allowed for Admin always and for Accountant when enabled via Tools; delete Admin only
+        $this->middleware(['role:Admin|Accountant'])->only(['index','create','store','edit','update']);
+        $this->middleware(['role:Admin'])->only(['destroy']);
     }
 
     public function index()
@@ -103,6 +104,11 @@ class OtherIncomeController extends Controller
     public function edit(Cashbook $income)
     {
         abort_unless($income->type === 'income', 404);
+        // Tools toggle: block Accountant if not enabled
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_other_income;
+            abort_unless($enabled, 403);
+        }
         $categories = Cashbook::where('type','income')->select('category')->distinct()->orderBy('category')->pluck('category');
         return view('other_incomes.edit', ['income' => $income, 'categories' => $categories]);
     }
@@ -110,6 +116,11 @@ class OtherIncomeController extends Controller
     public function update(Request $request, Cashbook $income)
     {
         abort_unless($income->type === 'income', 404);
+        // Tools toggle: block Accountant if not enabled
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_other_income;
+            abort_unless($enabled, 403);
+        }
         $data = $request->validate([
             'title' => ['required','string','max:150'],
             'date' => ['required','date'],

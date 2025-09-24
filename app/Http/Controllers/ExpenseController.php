@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cashbook;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
@@ -10,9 +11,9 @@ class ExpenseController extends Controller
     public function __construct()
     {
         $this->middleware(['auth']);
-        // Admin + Accountant can view and add; only Admin can edit/update/delete
-        $this->middleware(['role:Admin|Accountant'])->only(['index','create','store']);
-        $this->middleware(['role:Admin'])->only(['edit','update','destroy']);
+        // Admin + Accountant can view and add; edit/update allowed for Admin always and for Accountant when enabled via Tools; delete Admin only
+        $this->middleware(['role:Admin|Accountant'])->only(['index','create','store','edit','update']);
+        $this->middleware(['role:Admin'])->only(['destroy']);
     }
 
     public function index()
@@ -98,6 +99,10 @@ class ExpenseController extends Controller
     public function edit(Cashbook $expense)
     {
         abort_unless($expense->type === 'expense', 404);
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_expenses;
+            abort_unless($enabled, 403);
+        }
         $categories = Cashbook::where('type','expense')->select('category')->distinct()->orderBy('category')->pluck('category');
         return view('expenses.edit', ['expense' => $expense, 'categories' => $categories]);
     }
@@ -105,6 +110,10 @@ class ExpenseController extends Controller
     public function update(Request $request, Cashbook $expense)
     {
         abort_unless($expense->type === 'expense', 404);
+        if (auth()->user()->hasRole('Accountant')) {
+            $enabled = (bool) optional(Setting::first())->allow_accountant_edit_expenses;
+            abort_unless($enabled, 403);
+        }
         $data = $request->validate([
             'title' => ['required','string','max:150'],
             'date' => ['required','date'],

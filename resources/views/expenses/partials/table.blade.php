@@ -23,9 +23,10 @@
                     <td class="px-4 py-2">{{ $e->addedBy->name ?? '-' }}</td>
                     <td class="px-4 py-2">
                         <div class="flex flex-wrap items-center gap-2">
-                            @role('Admin')
-                            <a href="{{ route('expenses.edit',$e) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
-                            @endrole
+                            @php($tools = optional(\App\Models\Setting::first()))
+                            @if(auth()->check() && (auth()->user()->hasRole('Admin') || (auth()->user()->hasRole('Accountant') && ($tools->allow_accountant_edit_expenses ?? false))))
+                                <a href="{{ route('expenses.edit',$e) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
+                            @endif
                             @role('Admin')
                             <form action="{{ route('expenses.destroy',$e) }}" method="POST" onsubmit="return confirm('Delete this expense?')" class="inline">
                                 @csrf

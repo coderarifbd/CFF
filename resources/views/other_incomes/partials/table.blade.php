@@ -26,9 +26,10 @@
                     @hasanyrole('Admin|Accountant')
                     <td class="px-3 py-2 text-right">
                         <div class="inline-flex items-center gap-2">
-                            @role('Admin')
-                            <a href="{{ route('other-incomes.edit', $inc) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
-                            @endrole
+                            @php($tools = optional(\App\Models\Setting::first()))
+                            @if(auth()->check() && (auth()->user()->hasRole('Admin') || (auth()->user()->hasRole('Accountant') && ($tools->allow_accountant_edit_other_income ?? false))))
+                                <a href="{{ route('other-incomes.edit', $inc) }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium ring-1 ring-indigo-500/20 bg-indigo-50 hover:bg-indigo-100 text-indigo-700">✏️ Edit</a>
+                            @endif
                             @role('Admin')
                             <form method="POST" action="{{ route('other-incomes.destroy', $inc) }}" onsubmit="return confirm('Delete this income?');" class="inline">
                                 @csrf
