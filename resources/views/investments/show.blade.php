@@ -163,7 +163,7 @@
                         </div>
                         @endauth
 
-                        @if(auth()->check() && auth()->user()->hasRole('Admin'))
+                        @if(auth()->check() && auth()->user()->hasAnyRole('Admin|Accountant'))
                         <div class="bg-gray-50 p-4 rounded">
                             <h4 class="font-semibold mb-3">Mark as Returned</h4>
                             @if($investment->status === 'returned')
