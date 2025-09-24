@@ -20,7 +20,7 @@
                         <div class="text-xl font-bold text-red-600">{{ number_format($fineSum,2) }}</div>
                     </div>
                     <div class="p-4 bg-gray-50 rounded">
-                        <div class="text-sm text-gray-500">My Net (Deposit - Fine)</div>
+                        <div class="text-sm text-gray-500">My Net (Deposit + Extra + Fine)</div>
                         <div class="text-xl font-bold">{{ number_format($myNet,2) }}</div>
                     </div>
                 </div>

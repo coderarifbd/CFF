@@ -32,13 +32,8 @@ class DashboardController extends Controller
             $totalExtra = (float) ($totalsByType['extra'] ?? 0);
             $totalFine = (float) ($totalsByType['fine'] ?? 0);
 
-            // Company equal share (optional): include in cashBalance for member view
-            $income = (float) Cashbook::where('type','income')->sum('amount');
-            $expense = (float) Cashbook::where('type','expense')->sum('amount');
-            $companyBalance = $income - $expense;
-            $activeMembers = max(1, (int) Member::where('status','active')->count());
-            $equalShare = $companyBalance / $activeMembers;
-            $cashBalance = ($totalReceipts - $totalFine) + $equalShare; // member net + share
+            // Own deposit excludes fines
+            $ownDeposit = $totalSubscription + $totalExtra;
 
             // Global metrics for dashboard cards (even in member view)
             $totalInvestOutflow = (float) Investment::sum('amount');
@@ -49,29 +44,14 @@ class DashboardController extends Controller
             $activeInvestAmount = (float) Investment::where('status','active')->sum('amount');
             $returnedInvestAmount = (float) Investment::where('status','returned')->sum('return_amount');
             $remainingAfterInvest = $totalReceipts + $totalInvestReturn + $totalInvestInterest - $totalInvestOutflow;
-            $membersCount = (int) Member::count();
+            // Only active members should be counted in admin dashboard as well
+            $membersCount = (int) Member::where('status','active')->count();
 
-            // Expenses
-            $expenseAll = (float) Cashbook::where('type','expense')->sum('amount');
-            $otherExpenses = (float) Cashbook::where('type','expense')
-                ->where('category','!=','Investment Outflow')
-                ->sum('amount');
-            // Other income (non-deposit) - exclude system categories
-            $systemIncomeCats = ['Subscription','Extra','Fine','Interest','Investment Return'];
-            $otherIncome = (float) Cashbook::where('type','income')
-                ->whereNotIn('category', $systemIncomeCats)
-                ->sum('amount');
-
-            // Reporting metrics (Total Balance = Deposits + Interest + Other Income)
-            // Keep member-specific cards for deposit/fine/extra
-            $totalBalance = $totalReceipts + $totalInvestInterest + $otherIncome;
-
-            // But compute Remaining Balance the same way as before (using GLOBAL totals)
+            // GLOBALS needed for per-member shares and remaining balance
             $globalTotalReceipts      = (float) DepositReceipt::sum('total_amount');
             $globalInvestOutflow      = (float) Investment::sum('amount');
             $globalInvestReturn       = (float) Investment::where('status','returned')->sum('return_amount');
             $globalInvestInterest     = (float) InvestmentInterest::sum('amount');
-            $globalExpenseAll         = (float) Cashbook::where('type','expense')->sum('amount');
             $globalOtherExpenses      = (float) Cashbook::where('type','expense')
                 ->where('category','!=','Investment Outflow')->sum('amount');
             // Other income excludes system categories (case-insensitive) like in admin branch
@@ -81,14 +61,28 @@ class DashboardController extends Controller
                 ->whereRaw('LOWER(category) NOT IN ('.$placeholders.')', $systemIncomeCats)
                 ->sum('amount');
 
-            // Show operational expenses only (exclude Invest Outflow)
+            // Reclassify suspended members' deposits as Other Income for member dashboard view
+            $suspendedDeposits = (float) DepositReceipt::whereIn('member_id', function($q){
+                $q->select('id')->from('members')->where('status','suspended');
+            })->sum('total_amount');
+            // Adjusted other income used for member dashboard KPIs and shares
+            $otherIncome = $globalOtherIncome + $suspendedDeposits;
+
+            // Only active members should be counted
+            $membersCount = max(1, (int) Member::where('status','active')->count());
+            // Per requirements:
+            // total balance = total deposit + (interest / member count) + (other income / member count)
+            // Use adjusted otherIncome that includes suspended deposits
+            $totalBalance = $totalReceipts + ($globalInvestInterest / $membersCount) + ($otherIncome / $membersCount);
+            // grand total = total balance - (total expense / member count)
             $totalExpense = $globalOtherExpenses;
-            // Grand Total = Total Balance − Expense
-            $grandTotal = $totalBalance - $totalExpense;
-            // New rule: Remaining = Total Balance − Expense − Active Investment
-            $remainingBalance = $totalBalance - $totalExpense - $activeInvestAmount;
-            // For consistency
+            $grandTotal = $totalBalance - ($totalExpense / $membersCount);
+            // remaining balance = company remaining balance (same as admin dashboard)
+            // Avoid double counting: subtract suspended deposits from receipts and include them via otherIncome
+            $adminLikeTotalBalance = ($globalTotalReceipts - $suspendedDeposits) + $globalInvestInterest + $otherIncome;
+            $remainingBalance = $adminLikeTotalBalance - $totalExpense - $activeInvestAmount;
             $cashBalance = $remainingBalance;
+            // For KPI card consistency in blade: $otherIncome already set above
             $recentReceipts = DepositReceipt::with(['member','items'])
                 ->where('member_id', $memberId)
                 ->latest('date')->limit(5)->get();
@@ -128,12 +122,12 @@ class DashboardController extends Controller
                 ->whereRaw('LOWER(category) NOT IN ('.$placeholders.')', $systemIncomeCats)
                 ->sum('amount');
 
-            // Reporting metrics (exclude returns from total balance)
+            // Reporting metrics (exclude returns from total balance for display)
             // Total Balance = Deposits + Interest + Other Income
             $totalBalance = $totalReceipts + $totalInvestInterest + $otherIncome;
-            // Show operational expenses only (exclude Invest Outflow) in KPI
+            // Keep operational expense for the KPI card
             $totalExpense = $otherExpenses;
-            // Grand Total = Total Balance − Expense
+            // Reverted: Grand Total = Total Balance − Expense (operational only)
             $grandTotal = $totalBalance - $totalExpense;
             // New rule: Remaining = Total Balance − Expense − Active Investment
             $remainingBalance = $totalBalance - $totalExpense - $activeInvestAmount;

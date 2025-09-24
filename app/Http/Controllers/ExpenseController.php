@@ -10,9 +10,9 @@ class ExpenseController extends Controller
     public function __construct()
     {
         $this->middleware(['auth']);
-        // Admin + Accountant can manage expenses; restrict delete to Admin
-        $this->middleware(['role:Admin|Accountant'])->only(['index','create','store','edit','update']);
-        $this->middleware(['role:Admin'])->only(['destroy']);
+        // Admin + Accountant can view and add; only Admin can edit/update/delete
+        $this->middleware(['role:Admin|Accountant'])->only(['index','create','store']);
+        $this->middleware(['role:Admin'])->only(['edit','update','destroy']);
     }
 
     public function index()

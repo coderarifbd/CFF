@@ -8,6 +8,7 @@ use App\Models\DepositItem;
 use App\Models\Member;
 use App\Models\Cashbook;
 use App\Models\Setting;
+use App\Models\InvestmentInterest;
 use Illuminate\Http\Request;
 // use App\Http\Requests\StoreDepositRequest; // switched to dynamic validation in controller to support multi-type submission
 use App\Http\Requests\UpdateDepositRequest;
@@ -436,10 +437,25 @@ class DepositController extends Controller
         $fineSum = DepositItem::whereHas('receipt', fn($q)=>$q->where('member_id',$member->id))
             ->where('type','fine')->sum('amount');
         $myDeposit = (float)$subscriptionSum + (float)$extraSum;
-        $myNet = $myDeposit - (float)$fineSum;
+        // As requested: My Net = Deposit + Extra + Fine
+        $myNet = (float)$subscriptionSum + (float)$extraSum + (float)$fineSum;
 
-        // Company balance and equal share (per your rule: use total deposits only)
-        $companyBalance = (float) DepositReceipt::sum('total_amount');
+        // Company balance matches Admin dashboard Grand Total:
+        // Grand Total = (Deposits + Interest + Other Income) − Operational Expenses (exclude 'Investment Outflow')
+        $globalTotalReceipts  = (float) DepositReceipt::sum('total_amount');
+        $globalInvestInterest = (float) InvestmentInterest::sum('amount');
+        // Other income excludes system categories (case-insensitive)
+        $systemIncomeCats = ['subscription','extra','fine','interest','investment return'];
+        $placeholders = implode(',', array_fill(0, count($systemIncomeCats), '?'));
+        $otherIncome = (float) Cashbook::where('type','income')
+            ->whereRaw('LOWER(category) NOT IN ('.$placeholders.')', $systemIncomeCats)
+            ->sum('amount');
+        // Operational expenses only
+        $otherExpenses = (float) Cashbook::where('type','expense')
+            ->where('category','!=','Investment Outflow')
+            ->sum('amount');
+
+        $companyBalance = $globalTotalReceipts + $globalInvestInterest + $otherIncome - $otherExpenses;
         $activeMembers = max(1, (int) Member::where('status','active')->count());
         $equalShare = $companyBalance / $activeMembers;
 

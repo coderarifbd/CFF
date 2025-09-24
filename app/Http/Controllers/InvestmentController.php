@@ -17,9 +17,9 @@ class InvestmentController extends Controller
     {
         $this->middleware(['auth']);
         // Admin has full control over investments
-        $this->middleware(['role:Admin'])->only(['create','store','edit','update','destroy','markReturned']);
-        // Admin + Accountant can view list/show and manage interests (add/edit/update)
-        $this->middleware(['role:Admin|Accountant'])->only(['index','show','storeInterest','editInterest','updateInterest']);
+        $this->middleware(['role:Admin'])->only(['create','store','edit','update','destroy','markReturned','editInterest','updateInterest']);
+        // Admin + Accountant can view list/show and add interest (but not edit existing interest)
+        $this->middleware(['role:Admin|Accountant'])->only(['index','show','storeInterest']);
     }
 
     /**

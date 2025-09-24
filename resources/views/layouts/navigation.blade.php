@@ -23,11 +23,11 @@
                         {{ __('Deposits') }}
                     </x-nav-link>
                     @endhasanyrole
-                    @role('Member')
+                    @hasanyrole('Member|Accountant')
                     <x-nav-link :href="route('deposits.my')" :active="request()->routeIs('deposits.my')">
                         {{ __('My Deposits') }}
                     </x-nav-link>
-                    @endrole
+                    @endhasanyrole
                     @hasanyrole('Admin|Accountant')
                     <x-nav-link :href="route('expenses.index')" :active="request()->routeIs('expenses.*')">
                         {{ __('Expenses') }}
@@ -133,11 +133,11 @@
                 {{ __('Deposits') }}
             </x-responsive-nav-link>
             @endhasanyrole
-            @role('Member')
+            @hasanyrole('Member|Accountant')
             <x-responsive-nav-link :href="route('deposits.my')" :active="request()->routeIs('deposits.my')">
                 {{ __('My Deposits') }}
             </x-responsive-nav-link>
-            @endrole
+            @endhasanyrole
             @hasanyrole('Admin|Accountant')
             <x-responsive-nav-link :href="route('expenses.index')" :active="request()->routeIs('expenses.*')">
                 {{ __('Expenses') }}
